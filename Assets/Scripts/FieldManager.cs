@@ -1,42 +1,64 @@
 using UnityEngine;
 
-public class FieldManager : MonoBehaviour
+public class FieldManager
 {
-    [Header("Field Setting")]
-    public GameObject _playerFieldPrefab;
-    public GameObject _enemyFieldPrefab;
 
-    public int _rows = 8;
-    public int _cols = 10;
-    public float _cellWidth = 1f;
-    public float _cellHeight = 0.5f;
+    private GameObject _playerFieldPrefab;
+    private GameObject _enemyFieldPrefab;
+    private Transform _parent;
 
-    private GameObject[,] _FieldTiles;
+    private GameObject[,] _field;
 
-    void Start()
+    private float _cellSizeX;
+    private float _cellSizeY;
+
+
+    public FieldManager(GameObject playerField, GameObject enemeyField, float cellSizeX, float cellSizeY, Transform parent)
     {
-        GenerateField();
+        _playerFieldPrefab = playerField;
+        _enemyFieldPrefab = enemeyField;
+        _cellSizeX = cellSizeX;
+        _cellSizeY = cellSizeY;
+        _parent = parent;
     }
 
-
-    private void GenerateField()
+    public void GenerateField(int rows, int cols)
     {
-        _FieldTiles = new GameObject[_rows, _cols];
+        _field = new GameObject[rows, cols];
 
-        for (int y = 0; y < _rows; y++)
+        for (int x = 0; x < rows; x++)
         {
-            for (int x = 0; x < _cols; x++)
+            for (int y = 0; y < cols; y++)
             {
-                GameObject fieldTiles = (x <=4) ? _playerFieldPrefab : _enemyFieldPrefab;
+                GameObject fieldTiles = (x <= 4) ? _playerFieldPrefab : _enemyFieldPrefab;
 
-                Vector3 pos = new Vector3((x - y) * _cellWidth / 2f, (x + y) * _cellHeight / 2f, 0);
+                Vector3 pos = new Vector3((x - y) * _cellSizeX / 2f, (x + y) * _cellSizeY / 2f, 0);
 
-                GameObject tile = Instantiate(fieldTiles, transform);
+                GameObject tile = Object.Instantiate(fieldTiles, _parent);
                 tile.transform.localPosition = pos;
                 tile.name = $"{x},{y}";
-                _FieldTiles[y, x] = tile;
+                _field[x, y] = tile;
+                tile.SetActive(false);
 
             }
+        }
+    }
+
+    public bool IsPlayerField(int x) => x <= 4;
+
+    public void ShowField()
+    {
+        foreach (var field in _field)
+        {
+            field.SetActive(true);
+        }
+    }
+
+    public void HideField()
+    {
+        foreach (var field in _field)
+        {
+            field.SetActive(false);
         }
     }
 
