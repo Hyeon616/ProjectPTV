@@ -5,9 +5,9 @@ public class FieldManager
 
     private GameObject _playerFieldPrefab;
     private GameObject _enemyFieldPrefab;
-    private Transform _parent;
+    public Transform _parent;
 
-    private GameObject[,] _field;
+    private Tile[,] _field;
 
     private float _cellSizeX;
     private float _cellSizeY;
@@ -24,7 +24,7 @@ public class FieldManager
 
     public void GenerateField(int rows, int cols)
     {
-        _field = new GameObject[rows, cols];
+        _field = new Tile[rows, cols];
 
         for (int x = 0; x < rows; x++)
         {
@@ -37,20 +37,25 @@ public class FieldManager
                 GameObject tile = Object.Instantiate(fieldTiles, _parent);
                 tile.transform.localPosition = pos;
                 tile.name = $"{x},{y}";
-                _field[x, y] = tile;
-                tile.SetActive(false);
+
+                Tile t = tile.AddComponent<Tile>();
+                t._isPlayerField = (x <= 4);
+                _field[x, y] = t;
+
+                //tile.SetActive(false);
+                tile.GetComponent<SpriteRenderer>().enabled = false;
 
             }
         }
     }
 
-    public bool IsPlayerField(int x) => x <= 4;
+
 
     public void ShowField()
     {
         foreach (var field in _field)
         {
-            field.SetActive(true);
+            field.gameObject.SetActive(true);
         }
     }
 
@@ -58,8 +63,15 @@ public class FieldManager
     {
         foreach (var field in _field)
         {
-            field.SetActive(false);
+            field.gameObject.SetActive(false);
         }
     }
+
+    public Tile GetTile(int x, int y)
+    {
+
+        return _field[x, y];
+    }
+
 
 }
