@@ -1,95 +1,82 @@
-using System.Collections.Generic;
 using UnityEngine;
-
 
 public class UnitManager
 {
-    private FieldManager _fieldManager;
-    private UnitFactory _unitFactory;
+    private readonly UnitFactory _unitFactory = new UnitFactory();
 
-    private List<Unit> _playerUnits = new List<Unit>();
-    private List<Unit> _enemyUnits = new List<Unit>();
-
-    public UnitManager()
-    {
-        _unitFactory = new UnitFactory();
-    }
-
-    public Unit SpawnUnit(UnitData unitData, Owner owner, Tile tile, int unitLayer)
+    public Unit SpawnUnit(UnitData unitData, Owner owner, IUnitContainer slot, int unitLayer)
     {
 
-        Unit unit = _unitFactory.CreateUnit(unitData, owner, tile, tile.transform.parent, unitLayer);
+        Unit unit = _unitFactory.CreateUnit(unitData, owner, unitLayer);
 
-        AddUnit(unit, owner);
+        MoveUnit(unit, slot);
 
         return unit;
     }
 
-    public void AddUnit(Unit unit, Owner owner)
+
+    public bool DragDrop(Unit unit, IUnitContainer target)
     {
-        if (owner == Owner.Player)
-            _playerUnits.Add(unit);
-        else if (owner == Owner.Enemy)
-            _enemyUnits.Add(unit);
-    }
+        if (unit.UnitState.Owner != Owner.Player)
+            return false;
 
-    public void RemoveUnit(Unit unit)
-    {
-        if (unit._unitState.Owner == Owner.Player)
-            _playerUnits.Remove(unit);
-        else if (unit._unitState.Owner == Owner.Enemy)
-            _enemyUnits.Remove(unit);
-    }
+        if (unit == null || target == null)
+            return false;
 
-
-    public void DragDrop(Unit unit, Tile targetTile)
-    {
-        if (unit._unitState.Owner != Owner.Player)
-            return;
-
-        if (targetTile == null)
+        if (target.IsField)
         {
-            MoveToInventory(unit);
-            return;
+            if (target is Tile tile)
+            {
+                if (!tile.IsPlayerField)
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        if (targetTile.Unit != null)
-        {
-            SwapUnit(unit, targetTile.Unit);
-            return;
-        }
+        if (target.Unit != null)
+            SwapUnit(unit, target.Unit);
+        else
+            MoveUnit(unit, target);
 
-        MoveUnit(unit, targetTile);
+        return true;
     }
 
-    private void MoveToInventory(Unit unit)
+
+    private void MoveUnit(Unit unit, IUnitContainer target)
     {
 
-    }
+        if (unit.UnitState.CurrentSlot != null)
+            unit.UnitState.CurrentSlot.ClearUnit();
 
-    private void MoveUnit(Unit unit, Tile targetTile)
-    {
 
-        if (unit._currentTile != null)
-            unit._currentTile.ClearUnit();
+        target.SetUnit(unit);
+        unit.UnitState.PlaceUnit(target);
 
-        unit._currentTile = targetTile;
-        targetTile.SetUnit(unit);
+        unit.transform.SetParent(target.GetTransform());
+        unit.transform.localPosition = target.IsField ? new Vector3(0, 0.45f, 0) : Vector3.zero;
+
     }
 
 
     private void SwapUnit(Unit currentUnit, Unit swapUnit)
     {
-        Tile currentTile = currentUnit._currentTile;
-        Tile swapTile = swapUnit._currentTile;
+        IUnitContainer currentSlot = currentUnit.UnitState.CurrentSlot;
+        IUnitContainer swapSlot = swapUnit.UnitState.CurrentSlot;
 
-        if (currentTile != null)
-            currentTile.SetUnit(swapUnit);
-        if (swapTile != null)
-            swapTile.SetUnit(currentUnit);
+        currentSlot.SetUnit(swapUnit);
+        swapSlot.SetUnit(currentUnit);
 
-        currentUnit._currentTile = swapTile;
-        swapUnit._currentTile = currentTile;
+        currentUnit.UnitState.PlaceUnit(swapSlot);
+        swapUnit.UnitState.PlaceUnit(currentSlot);
+
+        currentUnit.transform.SetParent(swapSlot.GetTransform());
+        swapUnit.transform.SetParent(currentSlot.GetTransform());
+
+        currentUnit.transform.localPosition = swapSlot.IsField ? new Vector3(0, 0.45f, 0) : Vector3.zero;
+        swapUnit.transform.localPosition = currentSlot.IsField ? new Vector3(0, 0.45f, 0) : Vector3.zero;
 
     }
 

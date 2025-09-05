@@ -21,7 +21,10 @@ public class UnitDB : ScriptableObject
 
     public UnitData GetUnitData(UnitType unitType)
     {
-        return _unitDict[unitType];
+        if (_unitDict.TryGetValue(unitType, out var data))
+            return data;
+
+        return null;
     }
 
 }

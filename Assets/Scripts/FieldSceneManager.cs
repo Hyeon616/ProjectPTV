@@ -22,6 +22,7 @@ public class FieldSceneManager : MonoBehaviour
 
     private FieldManager _fieldManager;
     private UnitManager _unitManager;
+    private UnitFactory _unitFactory;
 
     public UnitManager UnitManager => _unitManager;
     public FieldManager FieldManager => _fieldManager;
@@ -32,7 +33,7 @@ public class FieldSceneManager : MonoBehaviour
     private void Awake()
     {
         _fieldManager = new FieldManager(_tilePrefab, _grid.cellSize.x, _grid.cellSize.y, _field.transform);
-        _unitManager = new UnitManager();
+         _unitManager = new UnitManager();
     }
 
     void Start()
@@ -42,7 +43,7 @@ public class FieldSceneManager : MonoBehaviour
 
         // test РЏДж
         _unitManager.SpawnUnit(StageManager._instance.UnitDB.GetUnitData(UnitType.Knight), Owner.Player, _fieldManager.GetTile(0, 3), (int)LayerNum.Unit);
-
+        
 
 
     }

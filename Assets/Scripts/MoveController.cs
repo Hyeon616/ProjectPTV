@@ -1,16 +1,20 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class MoveController : MonoBehaviour
 {
     private Camera _mainCamera;
     private Unit _dragUnit;
+    private Tile _highlightTile;
+
     private Vector3 _currentPos;
+    private IUnitContainer _currentSlot;
 
     [SerializeField] private FieldSceneManager _fieldSceneManager;
     private LayerMask _unitLayer;
     private LayerMask _tileLayer;
 
-    private Tile _highlightTile;
 
     void Start()
     {
@@ -54,10 +58,12 @@ public class MoveController : MonoBehaviour
         if (hit != null)
         {
             Unit unit = hit.GetComponent<Unit>();
-            if (unit != null && unit._unitState.Owner == Owner.Player)
+            if (unit != null && unit.UnitState.Owner == Owner.Player)
             {
                 _dragUnit = unit;
-                _currentPos = unit.transform.position;
+
+                _currentPos = _dragUnit.transform.position;
+                _currentSlot = _dragUnit.UnitState.CurrentSlot;
 
                 _fieldSceneManager.FieldManager.ShowField();
             }
@@ -71,10 +77,12 @@ public class MoveController : MonoBehaviour
             return;
 
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
-        _dragUnit.transform.position = new Vector3(pos.x, pos.y + 0.4f, _currentPos.z);
+        // 드래그 중
+        _dragUnit.transform.position = new Vector3(pos.x, pos.y + 0.4f, _dragUnit.transform.position.z);
 
+        // 하이라이트 처리
         Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
-        Tile targetTile = hit ? hit.GetComponent<Tile>() : null;
+        Tile targetTile = hit != null ? hit.GetComponent<Tile>() : null;
 
         if (_highlightTile != targetTile)
         {
@@ -92,33 +100,48 @@ public class MoveController : MonoBehaviour
     private void OnTouchUp(Vector3 screenPos)
     {
         if (_dragUnit == null)
-        {
-
             return;
-        }
+
 
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
+        IUnitContainer target = null;
 
         Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
-        Tile targetTile = hit ? hit.GetComponent<Tile>() : null;
+        if (hit != null) target = hit.GetComponent<IUnitContainer>();
 
-        _fieldSceneManager.UnitManager.DragDrop(_dragUnit, targetTile);
-
-
-        if (targetTile != null && targetTile.IsPlayerField)
+        if (target == null)
         {
-            _dragUnit.transform.SetParent(targetTile.transform);
-            _dragUnit.transform.localPosition = new Vector3(0, 0.45f, 0);
+            PointerEventData ped = new PointerEventData(EventSystem.current) { position = screenPos };
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(ped, results);
+            foreach (RaycastResult result in results)
+            {
+                target = result.gameObject.GetComponent<IUnitContainer>();
+                if (target != null)
+                    break;
+            }
         }
-        else
+
+        bool success = false;
+
+        if (target != null)
+            success = _fieldSceneManager.UnitManager.DragDrop(_dragUnit, target);
+
+        if (!success)
+        {
             _dragUnit.transform.position = _currentPos;
+            if (_currentSlot != null)
+            {
+                _dragUnit.transform.SetParent(_currentSlot.GetTransform());
+                _dragUnit.transform.localPosition = _currentSlot.IsField ? new Vector3(0, 0.45f, 0) : Vector3.zero;
+            }
+        }
 
         if (_highlightTile != null)
         {
             _highlightTile.HighlightTargetTile(false);
             _highlightTile = null;
         }
-
 
         _dragUnit = null;
         _fieldSceneManager.FieldManager.HideField();

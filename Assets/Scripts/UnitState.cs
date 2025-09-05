@@ -11,7 +11,7 @@ public class UnitState
     public int CurrentHp { get; private set; }
     public int CurrentMp { get; private set; }
 
-    public Tile CurrentTile { get; private set; }
+    public IUnitContainer CurrentSlot { get; private set; }
 
     public UnitState(UnitData unitData, Owner owner)
     {
@@ -21,9 +21,9 @@ public class UnitState
         CurrentMp = 0;
     }
 
-    public void PlaceUnit(Tile tile)
+    public void PlaceUnit(IUnitContainer slot)
     {
-        CurrentTile = tile;
+        CurrentSlot = slot;
 
     }
 

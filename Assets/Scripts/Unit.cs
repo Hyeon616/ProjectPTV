@@ -5,20 +5,12 @@ using UnityEngine;
 public class Unit : MonoBehaviour
 {
 
-    public UnitState _unitState;
-    public Tile _currentTile;
+    public UnitState UnitState {  get; private set; }
 
-    public void Init(UnitState unitState, Tile tile)
+    public void Init(UnitState state)
     {
-        _unitState = unitState;
-        SetTile(tile);
+        UnitState = state;
     }
 
-    public void SetTile(Tile tile)
-    {
-        _currentTile = tile;
-        transform.SetParent(_currentTile.transform);
-        transform.localPosition = new Vector3(0, 0.45f, 0);
-    }
 
 }

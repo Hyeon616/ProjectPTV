@@ -1,12 +1,14 @@
 using UnityEngine;
 
-public class Tile : MonoBehaviour
+public class Tile : MonoBehaviour, IUnitContainer
 {
     public Unit Unit { get; private set; }
     public bool IsPlayerField { get; private set; }
 
     public int X { get; private set; }
     public int Y { get; private set; }
+
+
 
     private SpriteRenderer _renderer;
     private Color _defaultColor;
@@ -38,4 +40,7 @@ public class Tile : MonoBehaviour
     {
         Unit = null;
     }
+
+    public Transform GetTransform() => transform;
+    public bool IsField => true;
 }
