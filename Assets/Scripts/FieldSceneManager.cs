@@ -20,9 +20,10 @@ public class FieldSceneManager : MonoBehaviour
     [SerializeField] private Field _field;
     [SerializeField] private Grid _grid;
 
+    [SerializeField] private BenchUI _benchUI;
+
     private FieldManager _fieldManager;
     private UnitManager _unitManager;
-    private UnitFactory _unitFactory;
 
     public UnitManager UnitManager => _unitManager;
     public FieldManager FieldManager => _fieldManager;
@@ -43,6 +44,8 @@ public class FieldSceneManager : MonoBehaviour
 
         // test РЏДж
         _unitManager.SpawnUnit(StageManager._instance.UnitDB.GetUnitData(UnitType.Knight), Owner.Player, _fieldManager.GetTile(0, 3), (int)LayerNum.Unit);
+
+        _unitManager.SpawnUnit(StageManager._instance.UnitDB.GetUnitData(UnitType.Archer), Owner.Player, _benchUI.GetEmptySlot(), (int)LayerNum.Unit);
         
 
 

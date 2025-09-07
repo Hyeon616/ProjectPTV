@@ -53,8 +53,36 @@ public class MoveController : MonoBehaviour
     private void OnTouchDown(Vector2 screenPos)
     {
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
-        Collider2D hit = Physics2D.OverlapPoint(pos, _unitLayer);
 
+        // inventory
+        PointerEventData eventData = new PointerEventData(EventSystem.current) { position = screenPos };
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
+
+        BenchSlot currentSlot = null;
+        foreach (var slot in results)
+        {
+            currentSlot = slot.gameObject.GetComponent<BenchSlot>();
+            if (currentSlot != null)
+                break;
+        }
+
+        if (currentSlot != null && currentSlot.Unit != null)
+        {
+            _dragUnit = currentSlot.Unit;
+            _currentSlot = currentSlot;
+            _currentPos = _dragUnit.transform.position;
+
+            currentSlot.ClearUnit();
+            _dragUnit.gameObject.SetActive(true);
+
+            _fieldSceneManager.FieldManager.ShowField();
+            return;
+        }
+
+
+        // Field
+        Collider2D hit = Physics2D.OverlapPoint(pos, _unitLayer);
         if (hit != null)
         {
             Unit unit = hit.GetComponent<Unit>();
@@ -62,9 +90,11 @@ public class MoveController : MonoBehaviour
             {
                 _dragUnit = unit;
 
-                _currentPos = _dragUnit.transform.position;
                 _currentSlot = _dragUnit.UnitState.CurrentSlot;
+                if (_currentSlot != null)
+                    _currentSlot.ClearUnit();
 
+                _currentPos = _dragUnit.transform.position;
                 _fieldSceneManager.FieldManager.ShowField();
             }
         }
@@ -102,8 +132,8 @@ public class MoveController : MonoBehaviour
         if (_dragUnit == null)
             return;
 
-
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
+
         IUnitContainer target = null;
 
         Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
@@ -111,14 +141,17 @@ public class MoveController : MonoBehaviour
 
         if (target == null)
         {
-            PointerEventData ped = new PointerEventData(EventSystem.current) { position = screenPos };
+            PointerEventData eventData = new PointerEventData(EventSystem.current) { position = screenPos };
             List<RaycastResult> results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(ped, results);
-            foreach (RaycastResult result in results)
+            EventSystem.current.RaycastAll(eventData, results);
+            foreach (var result in results)
             {
-                target = result.gameObject.GetComponent<IUnitContainer>();
-                if (target != null)
+                IUnitContainer slot = result.gameObject.GetComponent<IUnitContainer>();
+                if (slot != null)
+                {
+                    target = slot;
                     break;
+                }
             }
         }
 
@@ -129,11 +162,14 @@ public class MoveController : MonoBehaviour
 
         if (!success)
         {
-            _dragUnit.transform.position = _currentPos;
             if (_currentSlot != null)
             {
-                _dragUnit.transform.SetParent(_currentSlot.GetTransform());
-                _dragUnit.transform.localPosition = _currentSlot.IsField ? new Vector3(0, 0.45f, 0) : Vector3.zero;
+                _currentSlot.SetUnit(_dragUnit);
+                _dragUnit.gameObject.SetActive(!_currentSlot.IsField ? false : true);
+            }
+            else
+            {
+                _dragUnit.transform.position = _currentPos;
             }
         }
 

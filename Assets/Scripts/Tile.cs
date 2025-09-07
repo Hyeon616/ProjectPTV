@@ -34,6 +34,15 @@ public class Tile : MonoBehaviour, IUnitContainer
     public void SetUnit(Unit unit)
     {
         Unit = unit;
+
+        if(unit != null)
+        {
+            unit.gameObject.SetActive(true);
+            unit.transform.SetParent(transform);
+            unit.transform.localPosition = new Vector3(0, 0.25f, 0);
+            
+        }
+
     }
 
     public void ClearUnit()
