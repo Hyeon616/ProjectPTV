@@ -14,9 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _unitType: 2
   _prefab: {fileID: 4337202877968968558, guid: 0508e150fe2b83a4c8ffb7a74863ff9e, type: 3}
-  _portrait: {fileID: 1572034964, guid: a0ce7019ae0bba048925f50046f4ef5d, type: 3}
+  _benchPortrait: {fileID: 1764547110, guid: a0ce7019ae0bba048925f50046f4ef5d, type: 3}
+  _shopPortrait: {fileID: 21300000, guid: d0608c8fa5ac2f74eb319dbaf59df2b2, type: 3}
   _unitName: 
-  _hp: 0
-  _mp: 0
-  _attack: 0
-  _increaseMp: 0
+  _stats:
+  - _hp: 0
+    _mp: 0
+    _attack: 0
+    _increaseMp: 0
+    _cost: 0
+  - _hp: 0
+    _mp: 0
+    _attack: 0
+    _increaseMp: 0
+    _cost: 0
+  - _hp: 0
+    _mp: 0
+    _attack: 0
+    _increaseMp: 0
+    _cost: 0

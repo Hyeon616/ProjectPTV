@@ -3,15 +3,25 @@ using UnityEngine;
 public class UnitFactory
 {
 
-    public Unit CreateUnit(UnitData unitData, Owner owner, int unitLayer)
+    public Unit CreateUnit(UnitData unitData, Owner owner, int unitLayer, int grade)
     {
-        GameObject unitPrefab = Object.Instantiate(unitData._prefab);
-        Unit unit = unitPrefab.GetComponent<Unit>() ?? unitPrefab.AddComponent<Unit>();
+        if (unitData == null)
+        {
+            Debug.LogError(" UnitFactory: unitData is null!");
+            return null;
+        }
+        if (unitData._prefab == null)
+        {
+            Debug.LogError($" UnitFactory: Prefab not assigned for {unitData._unitName}");
+            return null;
+        }
 
+        GameObject unitPrefab = Object.Instantiate(unitData._prefab);
         unitPrefab.layer = unitLayer;
 
-        UnitState state = new UnitState(unitData, owner);
-        unit.Init(state);
+
+        Unit unit = unitPrefab.AddComponent<Unit>();
+        unit.Init(unitData, owner, grade);
 
         return unit;
 

@@ -29,7 +29,7 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
 
             if (_portraitImage != null)
             {
-                _portraitImage.sprite = unit.UnitState.UnitData._portrait;
+                _portraitImage.sprite = unit.UnitState.UnitData._benchPortrait;
 
                 Color color = _portraitImage.color;
                 color.a = 1f;

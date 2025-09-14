@@ -4,8 +4,8 @@ public class StageManager : MonoBehaviour
 {
     public static StageManager _instance { get; private set; }
 
-    [SerializeField] private UnitDB _unitDB;
-    public UnitDB UnitDB => _unitDB;
+    //[SerializeField] private UnitDB _unitDB;
+    //public UnitDB UnitDB => _unitDB;
 
 
 
@@ -19,8 +19,6 @@ public class StageManager : MonoBehaviour
 
         _instance = this;
         DontDestroyOnLoad(gameObject);
-
-        _unitDB.Init();
 
     }
 

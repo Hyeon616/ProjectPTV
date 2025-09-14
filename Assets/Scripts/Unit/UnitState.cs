@@ -7,45 +7,34 @@ public class UnitState
 
     public UnitData UnitData { get; private set; }
     public Owner Owner { get; private set; }
+    public UnitStats UnitStats { get; private set; }
+    public int CurrentGrade { get; private set; }
 
-    public int CurrentHp { get; private set; }
-    public int CurrentMp { get; private set; }
 
     public IUnitContainer CurrentSlot { get; private set; }
 
-    public UnitState(UnitData unitData, Owner owner)
+    public UnitState(UnitData unitData, Owner owner, int grade)
     {
         UnitData = unitData;
         Owner = owner;
-        CurrentHp = UnitData._hp;
-        CurrentMp = 0;
+        CurrentGrade = grade;
+
+        UnitStats = unitData.GetStats(grade);
+
     }
 
     public void PlaceUnit(IUnitContainer slot)
     {
         CurrentSlot = slot;
-
     }
 
-    public void Attack()
+    public void Upgrade()
     {
-        CurrentMp += UnitData._increaseMp;
-
-        if (CurrentMp >= 100)
+        if (CurrentGrade < UnitData.MaxGrade)
         {
-            UseSkill();
-            CurrentMp = 0;
+            CurrentGrade++;
+            UnitStats = UnitData.GetStats(CurrentGrade);
         }
-    }
-
-    public void UseSkill()
-    {
-        Debug.Log($"{UnitData._unitName} 스킬 사용");
-    }
-
-    public void Die()
-    {
-        Debug.Log($"{UnitData._unitName} 사망");
     }
 
 }

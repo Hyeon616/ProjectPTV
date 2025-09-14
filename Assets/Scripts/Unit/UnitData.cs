@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum UnitType
@@ -10,7 +11,7 @@ public enum UnitType
     LongBow,
     Paladin,
     Wizard,
-    DarkKnight
+    DeathKnight
 }
 
 public enum Owner
@@ -19,6 +20,17 @@ public enum Owner
     Enemy
 }
 
+[System.Serializable]
+public class UnitStats
+{
+    public int _hp;
+    public int _mp;
+    public int _attack;
+    public int _increaseMp;
+
+    public int _cost;
+
+}
 
 
 [CreateAssetMenu(fileName = "UnitData", menuName = "Game/UnitData")]
@@ -27,14 +39,22 @@ public class UnitData : ScriptableObject
 
     public UnitType _unitType;
     public GameObject _prefab;
-    public Sprite _portrait;
+    public Sprite _benchPortrait;
+    public Sprite _shopPortrait;
     public string _unitName;
 
+    public List<UnitStats> _stats;
 
-    public int _hp;
-    public int _mp;
-    public int _attack;
-    public int _increaseMp;
 
+    public UnitStats GetStats(int grade)
+    {
+
+        if (grade <= 0 || grade > _stats.Count)
+            return _stats[grade - 1];
+
+        return _stats[grade - 1];
+    }
+
+    public int MaxGrade => _stats.Count;
 
 }

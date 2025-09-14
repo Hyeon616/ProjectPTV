@@ -13,5 +13,12 @@ MonoBehaviour:
   m_Name: UnitDB
   m_EditorClassIdentifier: 
   _units:
-  - {fileID: 11400000, guid: ad38f1841d8d98b409a7dbe29b5d9bdc, type: 2}
   - {fileID: 11400000, guid: a9b1d1ffe99a53b499b8e5c426aee3f5, type: 2}
+  - {fileID: 11400000, guid: 91b614256b2e4f542bc4002a7396feba, type: 2}
+  - {fileID: 11400000, guid: 301e5a4c388c61446b8babba36ff2038, type: 2}
+  - {fileID: 11400000, guid: 3a63f949c11757b4fb32f53a1abc28ee, type: 2}
+  - {fileID: 11400000, guid: ad38f1841d8d98b409a7dbe29b5d9bdc, type: 2}
+  - {fileID: 11400000, guid: bd843cff89e4a2c4d99f225abdf1eff0, type: 2}
+  - {fileID: 11400000, guid: c6b8118c9301a474b9563f420eda68de, type: 2}
+  - {fileID: 11400000, guid: 52bf9eaae4f7cf047bdb6c546db97209, type: 2}
+  - {fileID: 11400000, guid: 796032d5b861fca48ac78fe414bfb6a0, type: 2}
