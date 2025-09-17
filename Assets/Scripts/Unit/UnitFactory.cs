@@ -20,7 +20,7 @@ public class UnitFactory
         unitPrefab.layer = unitLayer;
 
 
-        Unit unit = unitPrefab.AddComponent<Unit>();
+        Unit unit = unitPrefab.GetComponent<Unit>();
         unit.Init(unitData, owner, grade);
 
         return unit;

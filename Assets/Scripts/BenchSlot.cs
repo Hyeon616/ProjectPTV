@@ -1,11 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BenchSlot : MonoBehaviour, IUnitContainer
 {
     [SerializeField] private Image _portraitImage;
+
+    [SerializeField] private Image _backGround;
+    [SerializeField] private Image[] _stars;
 
     public Unit Unit { get; private set; }
 
@@ -16,8 +17,15 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
         {
             _portraitImage = transform.GetComponentInChildren<Image>();
         }
+
+
     }
 
+    private void Start()
+    {
+
+       // HideUI();
+    }
 
     public void SetUnit(Unit unit)
     {
@@ -35,10 +43,13 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
                 color.a = 1f;
                 _portraitImage.color = color;
             }
+
+            ShowStarUI();
+
         }
         else
         {
-            HidePortrait();
+            HideUI();
         }
 
     }
@@ -46,10 +57,10 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
     {
         Unit = null;
 
-        HidePortrait();
+        HideUI();
     }
 
-    private void HidePortrait()
+    private void HideUI()
     {
         if (_portraitImage != null)
         {
@@ -59,8 +70,50 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
             color.a = 0f;
             _portraitImage.color = color;
         }
+
+        if (_backGround != null)
+        {
+            Color color = _backGround.color;
+            color.a = 0f;
+            _backGround.color = color;
+
+        }
+
+        if (_stars != null)
+        {
+            foreach (var star in _stars)
+            {
+                Color color = star.color;
+                color.a = 0f;
+                star.color = color;
+            }
+        }
     }
 
+    private void ShowStarUI()
+    {
+        
+
+        if (_backGround != null)
+        {
+            Color color = _backGround.color;
+            color.a = 1f;
+            _backGround.color = color;
+
+        }
+
+        if (_stars != null)
+        {
+            for (int i = 0; i < _stars.Length; i++)
+            {
+
+                Color color = _stars[i].color;
+                color.a = (i < Unit.UnitState.CurrentGrade) ? 1f : 0f;
+                _stars[i].color = color;
+            }
+        }
+
+    }
 
     public Transform GetTransform() => transform;
 

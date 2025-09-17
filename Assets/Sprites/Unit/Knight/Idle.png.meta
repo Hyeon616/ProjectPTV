@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: c4c194db1d7001c42ab5772f83faee66
+guid: 039409604182eaa45b92968bf28a946d
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -1094,7 +1094,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_0
+      name: 180Turn_105
       rect:
         serializedVersion: 2
         x: 0
@@ -1115,7 +1115,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_1
+      name: 180Turn_106
       rect:
         serializedVersion: 2
         x: 128
@@ -1136,7 +1136,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_2
+      name: 180Turn_107
       rect:
         serializedVersion: 2
         x: 256
@@ -1157,7 +1157,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_3
+      name: 180Turn_108
       rect:
         serializedVersion: 2
         x: 384
@@ -1178,7 +1178,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_4
+      name: 180Turn_109
       rect:
         serializedVersion: 2
         x: 512
@@ -1199,7 +1199,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_5
+      name: 180Turn_110
       rect:
         serializedVersion: 2
         x: 640
@@ -1220,10 +1220,10 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_6
+      name: 180Turn_111
       rect:
         serializedVersion: 2
-        x: 767
+        x: 768
         y: 0
         width: 128
         height: 128
@@ -1241,7 +1241,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_7
+      name: 180Turn_112
       rect:
         serializedVersion: 2
         x: 896
@@ -1262,7 +1262,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_8
+      name: 180Turn_113
       rect:
         serializedVersion: 2
         x: 1024
@@ -1283,7 +1283,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_9
+      name: 180Turn_114
       rect:
         serializedVersion: 2
         x: 1152
@@ -1304,7 +1304,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_10
+      name: 180Turn_115
       rect:
         serializedVersion: 2
         x: 1280
@@ -1325,7 +1325,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_11
+      name: 180Turn_116
       rect:
         serializedVersion: 2
         x: 1408
@@ -1346,7 +1346,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_12
+      name: 180Turn_117
       rect:
         serializedVersion: 2
         x: 1536
@@ -1367,7 +1367,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_13
+      name: 180Turn_118
       rect:
         serializedVersion: 2
         x: 1664
@@ -1388,7 +1388,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 180Turn_14
+      name: 180Turn_119
       rect:
         serializedVersion: 2
         x: 1792
@@ -1419,24 +1419,39 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      180Turn_0: -941546995
-      180Turn_1: -1057781866
-      180Turn_10: 308109521
+      180Turn_0: 1572034964
+      180Turn_1: 1821859995
+      180Turn_10: -415779505
       180Turn_100: 370117870
       180Turn_101: -1976431664
       180Turn_102: -1813210052
       180Turn_103: 1107728983
       180Turn_104: 1758548834
-      180Turn_11: -1358012762
-      180Turn_12: 1098923307
-      180Turn_13: -480851569
-      180Turn_14: 2117771865
+      180Turn_105: -941546995
+      180Turn_106: -1057781866
+      180Turn_107: 1903005560
+      180Turn_108: 143803784
+      180Turn_109: 238712352
+      180Turn_11: -1440143263
+      180Turn_110: 2072419385
+      180Turn_111: 1092783641
+      180Turn_112: -1097627562
+      180Turn_113: -931745013
+      180Turn_114: 787312071
+      180Turn_115: 308109521
+      180Turn_116: -1358012762
+      180Turn_117: 1098923307
+      180Turn_118: -480851569
+      180Turn_119: 2117771865
+      180Turn_12: -1870313970
+      180Turn_13: 1283701534
+      180Turn_14: -406932642
       180Turn_15: 1764547110
       180Turn_16: 1020148631
       180Turn_17: -1431922242
       180Turn_18: 1275952321
       180Turn_19: 1101081719
-      180Turn_2: 1903005560
+      180Turn_2: -1772909657
       180Turn_20: -1208392551
       180Turn_21: -1251164002
       180Turn_22: -426109285
@@ -1447,7 +1462,7 @@ TextureImporter:
       180Turn_27: -1574755312
       180Turn_28: 1700083235
       180Turn_29: -1920248660
-      180Turn_3: 143803784
+      180Turn_3: 1700468566
       180Turn_30: -611850040
       180Turn_31: 1040071455
       180Turn_32: 527497427
@@ -1458,7 +1473,7 @@ TextureImporter:
       180Turn_37: 593462784
       180Turn_38: 798462003
       180Turn_39: -543069414
-      180Turn_4: 238712352
+      180Turn_4: 1002529087
       180Turn_40: -704288788
       180Turn_41: 728703522
       180Turn_42: -158354136
@@ -1469,7 +1484,7 @@ TextureImporter:
       180Turn_47: -1449730520
       180Turn_48: 1619807978
       180Turn_49: -925726222
-      180Turn_5: 2072419385
+      180Turn_5: -963315668
       180Turn_50: -448124887
       180Turn_51: 1724538780
       180Turn_52: 1624115182
@@ -1480,7 +1495,7 @@ TextureImporter:
       180Turn_57: 2120809991
       180Turn_58: 583817954
       180Turn_59: -908635079
-      180Turn_6: 1092783641
+      180Turn_6: -72721809
       180Turn_60: 2048816764
       180Turn_61: -1362951675
       180Turn_62: 1609221731
@@ -1491,7 +1506,7 @@ TextureImporter:
       180Turn_67: 1982647365
       180Turn_68: -1812926136
       180Turn_69: -1755297706
-      180Turn_7: -1097627562
+      180Turn_7: 431024180
       180Turn_70: -734300934
       180Turn_71: -207604586
       180Turn_72: 22741951
@@ -1502,7 +1517,7 @@ TextureImporter:
       180Turn_77: -1487649243
       180Turn_78: -846327637
       180Turn_79: 687833170
-      180Turn_8: -931745013
+      180Turn_8: -989847357
       180Turn_80: 162669561
       180Turn_81: 79916898
       180Turn_82: -158527550
@@ -1513,7 +1528,7 @@ TextureImporter:
       180Turn_87: -817959859
       180Turn_88: 1622045647
       180Turn_89: -714215053
-      180Turn_9: 787312071
+      180Turn_9: 191795052
       180Turn_90: -806694120
       180Turn_91: 931049864
       180Turn_92: 119029554
@@ -1524,7 +1539,6 @@ TextureImporter:
       180Turn_97: 229468112
       180Turn_98: 1196322242
       180Turn_99: 1119516579
-      Idle_0: -63589753
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

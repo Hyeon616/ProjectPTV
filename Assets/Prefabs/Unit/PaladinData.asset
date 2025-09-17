@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _unitType: 6
   _prefab: {fileID: 3815918632278153097, guid: 03a9672a55d84dc4b88ed38cfbf07e2c, type: 3}
-  _benchPortrait: {fileID: 0}
+  _benchPortrait: {fileID: 1764547110, guid: 10de983645c1c7f4390d5fb3056bceb3, type: 3}
   _shopPortrait: {fileID: 21300000, guid: 19c5e0065943527479a1998be5f67bed, type: 3}
   _unitName: 
   _stats:
