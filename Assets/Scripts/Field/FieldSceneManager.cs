@@ -54,12 +54,13 @@ public class FieldSceneManager : MonoBehaviour
         var unitdata1 = _unitDB.GetUnitData(UnitType.Knight);
         var unitdata2 = _unitDB.GetUnitData(UnitType.Archer);
 
-        _unitManager.SpawnUnitCoordinate(unitdata1, Owner.Player, _fieldManager.GetTile(0, 3), (int)LayerNum.Unit, 3);
-        _unitManager.SpawnUnitCoordinate(unitdata1, Owner.Player, _fieldManager.GetTile(0, 2), (int)LayerNum.Unit, 2);
+        _unitManager.SpawnUnitCoordinate(unitdata1, Owner.Player, _fieldManager.GetTile(0, 3), (int)LayerNum.Unit, 1);
+        _unitManager.SpawnUnitCoordinate(unitdata1, Owner.Player, _fieldManager.GetTile(0, 2), (int)LayerNum.Unit, 1);
 
-        _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 2);
+        _unitManager.SpawnUnit(unitdata1, Owner.Player, (int)LayerNum.Unit, 1);
         _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 1);
-        _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 3);
+        _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 1);
+        _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 1);
 
         _shopUI.Init(_shopManager);
         _shopUI.ShowShop();

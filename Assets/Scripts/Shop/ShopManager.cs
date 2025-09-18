@@ -22,6 +22,7 @@ public class ShopManager
         }
 
         _unitManager.SpawnUnit(unitData, Owner.Player, (int)LayerNum.Unit, grade);
+        
         _playerGold -= price;
         return true;
     }

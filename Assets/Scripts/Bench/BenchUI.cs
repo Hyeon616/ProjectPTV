@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,8 +16,16 @@ public class BenchUI : MonoBehaviour
             var slot = go.GetComponent<BenchSlot>();
             _slots.Add(slot);
         }
+
     }
 
+    public IEnumerable<BenchSlot> GetAllUnits()
+    {
+        foreach (var slot in _slots)
+        {
+            yield return slot;
+        }
+    }
 
     public BenchSlot GetEmptySlot()
     {

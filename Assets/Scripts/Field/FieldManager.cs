@@ -132,6 +132,12 @@ public class FieldManager
         return null;
     }
 
-
+    public IEnumerable<Tile> GetAllUnits()
+    {
+        foreach (var tile in _field)
+        {
+            yield return tile;
+        }
+    }
 
 }

@@ -21,14 +21,9 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
 
     }
 
-    private void Start()
-    {
-
-       // HideUI();
-    }
-
     public void SetUnit(Unit unit)
     {
+        
         Unit = unit;
 
         if (unit != null)
@@ -38,10 +33,7 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
             if (_portraitImage != null)
             {
                 _portraitImage.sprite = unit.UnitState.UnitData._benchPortrait;
-
-                Color color = _portraitImage.color;
-                color.a = 1f;
-                _portraitImage.color = color;
+                _portraitImage.enabled = true;
             }
 
             ShowStarUI();
@@ -65,17 +57,13 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
         if (_portraitImage != null)
         {
             _portraitImage.sprite = null;
+            _portraitImage.enabled = false;
 
-            Color color = _portraitImage.color;
-            color.a = 0f;
-            _portraitImage.color = color;
         }
 
         if (_backGround != null)
         {
-            Color color = _backGround.color;
-            color.a = 0f;
-            _backGround.color = color;
+            _backGround.enabled = false;
 
         }
 
@@ -83,22 +71,18 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
         {
             foreach (var star in _stars)
             {
-                Color color = star.color;
-                color.a = 0f;
-                star.color = color;
+                star.enabled = false;
             }
         }
     }
 
     private void ShowStarUI()
     {
-        
+
 
         if (_backGround != null)
         {
-            Color color = _backGround.color;
-            color.a = 1f;
-            _backGround.color = color;
+            _backGround.enabled = true;
 
         }
 
@@ -106,10 +90,8 @@ public class BenchSlot : MonoBehaviour, IUnitContainer
         {
             for (int i = 0; i < _stars.Length; i++)
             {
+                _stars[i].enabled = (i < Unit.UnitState.CurrentGrade);
 
-                Color color = _stars[i].color;
-                color.a = (i < Unit.UnitState.CurrentGrade) ? 1f : 0f;
-                _stars[i].color = color;
             }
         }
 
