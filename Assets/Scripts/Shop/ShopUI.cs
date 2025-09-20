@@ -53,11 +53,11 @@ public class ShopUI : MonoBehaviour
 
     private void BuyUnit(UnitData unitData, int grade)
     {
-        int price = 70 * grade;
+        int price = 10 * grade;
         _shopManager.BuyUnit(unitData, grade, price);
 
         // ±¸¸Å ÈÄ ´Ý±â
-        StartCoroutine(HideShop());
+        //StartCoroutine(HideShop());
     }
 
     public void ShowShop()

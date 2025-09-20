@@ -6,14 +6,15 @@ public class UnitManager
     private readonly UnitFactory _unitFactory = new UnitFactory();
     private readonly FieldManager _fieldManager;
     private readonly BenchUI _benchUI;
+    private readonly EffectManager _effectManager;
 
     private readonly Dictionary<UnitType, Dictionary<int, List<Unit>>> _allUnits = new Dictionary<UnitType, Dictionary<int, List<Unit>>>();
 
-    public UnitManager(FieldManager fieldManager, BenchUI benchUI)
+    public UnitManager(FieldManager fieldManager, BenchUI benchUI, EffectManager effectManager)
     {
         _fieldManager = fieldManager;
         _benchUI = benchUI;
-
+        _effectManager = effectManager;
     }
 
     public Unit SpawnUnit(UnitData unitData, Owner owner, int unitLayer, int grade)
@@ -53,6 +54,8 @@ public class UnitManager
     public void UpgradeUnits()
     {
         bool upgrade;
+        Transform finalUpgradeTarget = null;
+        List<Transform> allStartTransform = new List<Transform>();
 
         do
         {
@@ -65,7 +68,7 @@ public class UnitManager
                 {
                     if (gradePair.Value.Count >= 3 && gradePair.Key < 3)
                     {
-                        ExcuteUpgrade(gradePair.Value, gradePair.Key + 1);
+                        ExcuteUpgrade(gradePair.Value, gradePair.Key + 1, ref finalUpgradeTarget, allStartTransform);
                         upgrade = true;
                         break;
                     }
@@ -76,9 +79,20 @@ public class UnitManager
 
         }
         while (upgrade);
+
+        if (finalUpgradeTarget != null)
+        {
+            _effectManager.PlayUpgradeEffect(allStartTransform, finalUpgradeTarget, () =>
+            {
+                var unit = finalUpgradeTarget.GetComponentInChildren<Unit>();
+                if (unit != null && unit.UnitState.CurrentSlot.IsField)
+                    unit.gameObject.SetActive(true);
+
+            });
+        }
     }
 
-    private void ExcuteUpgrade(List<Unit> units, int nextGrade)
+    private void ExcuteUpgrade(List<Unit> units, int nextGrade, ref Transform finalTargetTransform, List<Transform> allStartTransform)
     {
 
         Unit[] toUpgrade = new Unit[3];
@@ -109,22 +123,34 @@ public class UnitManager
 
         for (int i = 0; i < 3; i++)
         {
+            var slot = toUpgrade[i].UnitState.CurrentSlot;
+            if (slot is BenchSlot benchSlot)
+                allStartTransform.Add(benchSlot.transform);
+            else
+                allStartTransform.Add(toUpgrade[i].transform);
+
+        }
+
+        // 기존 유닛 제거
+        for (int i = 0; i < 3; i++)
+        {
             toUpgrade[i].UnitState.CurrentSlot.ClearUnit();
             Object.Destroy(toUpgrade[i].gameObject);
         }
 
         Unit newUnit = _unitFactory.CreateUnit(mainUnit.UnitState.UnitData, Owner.Player, (int)LayerNum.Unit, nextGrade);
+        newUnit.gameObject.SetActive(false);
 
         newUnit.UnitState.PlaceUnit(spawnSlot);
         spawnSlot.SetUnit(newUnit);
 
-        UpgradeEffect(toUpgrade, newUnit);
+        if (spawnSlot is BenchSlot benchSlotTransfrom)
+            finalTargetTransform = benchSlotTransfrom.transform;
+        else
+            finalTargetTransform = newUnit.transform;
+
     }
 
-    private void UpgradeEffect(Unit[] toUpgrade, Unit newUnit)
-    {
-        // TODO Effect
-    }
 
     private void CollectUnits()
     {
