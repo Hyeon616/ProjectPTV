@@ -29,7 +29,8 @@ public class UnitStats
     public int _increaseMp;
 
     public int _cost;
-
+    public int _attackRange;
+    public float _attackInterval;
 }
 
 
