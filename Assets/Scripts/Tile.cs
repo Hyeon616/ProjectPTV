@@ -1,3 +1,4 @@
+using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 
 public class Tile : MonoBehaviour, IUnitContainer
@@ -8,6 +9,8 @@ public class Tile : MonoBehaviour, IUnitContainer
     public int X { get; private set; }
     public int Y { get; private set; }
 
+
+    public Unit ReservedUnit { get; private set; }
 
 
     private SpriteRenderer _renderer;
@@ -34,15 +37,38 @@ public class Tile : MonoBehaviour, IUnitContainer
     public void SetUnit(Unit unit)
     {
         Unit = unit;
+        ReservedUnit = null;
 
-        if(unit != null)
+        if (unit != null)
         {
             unit.gameObject.SetActive(true);
             unit.transform.SetParent(transform);
             unit.transform.localPosition = new Vector3(0, 0.25f, 0);
-            
+
+            unit.CurrentTile(this);
         }
 
+    }
+    public void ReserveTile(Unit reserveUnit)
+    {
+        ReservedUnit = reserveUnit;
+    }
+
+    public void ClearReserve(Unit unit)
+    {
+        if (ReservedUnit == unit)
+            ReservedUnit = null;
+    }
+
+    public bool IsFreeFor(Unit unit)
+    {
+        if (Unit != null && Unit != unit)
+            return false;
+
+        if (ReservedUnit != null && ReservedUnit != unit)
+            return false;
+
+        return true;
     }
 
     public void ClearUnit()

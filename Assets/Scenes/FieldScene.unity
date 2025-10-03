@@ -27509,6 +27509,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42418467153c0bb43933dae864526496, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _fieldSceneManager: {fileID: 282262736}
+  _stageWaveData:
+  - {fileID: 11400000, guid: c74a5ebd02d336248b696ffd991ffcb3, type: 2}
+  - {fileID: 11400000, guid: 36c75325e503d614c8ce859751cd97c0, type: 2}
+  - {fileID: 11400000, guid: 7d6126afa1bd70148a0e2b6df61bdb91, type: 2}
+  - {fileID: 11400000, guid: 0f7ded16ee0fea04783984a7fbd4e533, type: 2}
+  - {fileID: 11400000, guid: 4279cffa9c9fdad4991e5bbe8ea18369, type: 2}
 --- !u!4 &1423709541
 Transform:
   m_ObjectHideFlags: 0
@@ -27918,6 +27925,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _fieldSceneManager: {fileID: 282262736}
+  _stageManager: {fileID: 1423709540}
 --- !u!4 &2107543615
 Transform:
   m_ObjectHideFlags: 0

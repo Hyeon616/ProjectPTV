@@ -12,6 +12,8 @@ public class MoveController : MonoBehaviour
     private IUnitContainer _currentSlot;
 
     [SerializeField] private FieldSceneManager _fieldSceneManager;
+    [SerializeField] private StageManager _stageManager;
+
     private LayerMask _unitLayer;
     private LayerMask _tileLayer;
 
@@ -54,7 +56,7 @@ public class MoveController : MonoBehaviour
     {
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
 
-        // inventory
+
         PointerEventData eventData = new PointerEventData(EventSystem.current) { position = screenPos };
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
@@ -76,10 +78,13 @@ public class MoveController : MonoBehaviour
             currentSlot.ClearUnit();
             _dragUnit.gameObject.SetActive(true);
 
-            _fieldSceneManager.FieldManager.ShowField();
+            if (!_stageManager.IsBattle)
+                _fieldSceneManager.FieldManager.ShowField();
             return;
         }
 
+        if (_stageManager != null && _stageManager.IsBattle)
+            return;
 
         // Field
         Collider2D hit = Physics2D.OverlapPoint(pos, _unitLayer);
@@ -133,11 +138,13 @@ public class MoveController : MonoBehaviour
             return;
 
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
-
         IUnitContainer target = null;
 
-        Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
-        if (hit != null) target = hit.GetComponent<IUnitContainer>();
+        if(!(_stageManager != null && _stageManager.IsBattle))
+        {
+            Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
+            if (hit != null) target = hit.GetComponent<IUnitContainer>();
+        }
 
         if (target == null)
         {

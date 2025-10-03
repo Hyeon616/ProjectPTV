@@ -3,7 +3,7 @@ using UnityEngine;
 public class UnitFactory
 {
 
-    public Unit CreateUnit(UnitData unitData, Owner owner, int unitLayer, int grade)
+    public Unit CreateUnit(UnitData unitData, Owner owner, int unitLayer, int grade,FieldManager fieldManager)
     {
         if (unitData == null)
         {
@@ -21,7 +21,7 @@ public class UnitFactory
 
 
         Unit unit = unitPrefab.GetComponent<Unit>();
-        unit.Init(unitData, owner, grade);
+        unit.Init(unitData, owner, grade, fieldManager);
 
         return unit;
 

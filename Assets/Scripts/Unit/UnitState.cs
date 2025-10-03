@@ -13,14 +13,16 @@ public class UnitState
     public UnitData UnitData { get; private set; }
     public Owner Owner { get; private set; }
     public UnitStats UnitStats { get; private set; }
-    public int CurrentGrade { get; private set; }
 
+    // Grade
+    public int CurrentGrade { get; private set; }
 
     public IUnitContainer CurrentSlot { get; private set; }
     public UnitActionState CurrentState { get; private set; } = UnitActionState.Idle;
 
     public int _currentHp;
     public int _currentMp;
+    public bool IsDead => _currentHp <= 0;
 
     public UnitState(UnitData unitData, Owner owner, int grade)
     {
@@ -33,16 +35,21 @@ public class UnitState
         _currentMp = 0;
     }
 
-    public bool IsDead => _currentHp <= 0;
 
-    public void PlaceUnit(IUnitContainer slot)
-    {
-        CurrentSlot = slot;
-    }
+    public void PlaceUnit(IUnitContainer slot) => CurrentSlot = slot;
+    public void ChangeState(UnitActionState next) => CurrentState = next;
 
-    public void ChangeState(UnitActionState next)
+    public void TakeDamage(int amount)
     {
-        CurrentState = next;
+        if (IsDead)
+            return;
+
+        _currentHp -= amount;
+        if(_currentHp <= 0)
+        {
+            _currentHp = 0;
+            ChangeState(UnitActionState.Die);
+        }
     }
 
     public void GainMp(int amount)
@@ -50,7 +57,6 @@ public class UnitState
         _currentMp += amount;
         if (_currentMp > 100)
             _currentMp = 100;
-
     }
 
     public void ResetForWave()
@@ -60,13 +66,5 @@ public class UnitState
         ChangeState(UnitActionState.Idle);
     }
 
-    public void Upgrade()
-    {
-        if (CurrentGrade < UnitData.MaxGrade)
-        {
-            CurrentGrade++;
-            UnitStats = UnitData.GetStats(CurrentGrade);
-        }
-    }
 
 }

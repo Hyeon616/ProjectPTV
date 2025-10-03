@@ -18,18 +18,24 @@ MonoBehaviour:
   _shopPortrait: {fileID: 21300000, guid: 19c5e0065943527479a1998be5f67bed, type: 3}
   _unitName: 
   _stats:
-  - _hp: 0
+  - _hp: 350
     _mp: 0
-    _attack: 0
-    _increaseMp: 0
-    _cost: 0
-  - _hp: 0
+    _attack: 45
+    _increaseMp: 20
+    _cost: 70
+    _attackRange: 1
+    _attackInterval: 1.2
+  - _hp: 595
     _mp: 0
-    _attack: 0
-    _increaseMp: 0
-    _cost: 0
-  - _hp: 0
+    _attack: 77
+    _increaseMp: 24
+    _cost: 140
+    _attackRange: 1
+    _attackInterval: 1.02
+  - _hp: 1012
     _mp: 0
-    _attack: 0
-    _increaseMp: 0
-    _cost: 0
+    _attack: 131
+    _increaseMp: 29
+    _cost: 210
+    _attackRange: 1
+    _attackInterval: 0.87

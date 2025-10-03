@@ -13,6 +13,9 @@ public class FieldManager
     private float _cellSizeX;
     private float _cellSizeY;
 
+    public int Rows { get; private set; }
+    public int Cols { get; private set; }
+
     private readonly Color _playerFieldColor = new Color(1f, 1f, 1f); // white
     private readonly Color _enemyFieldColor = new Color(0f, 0.78f, 0.75f); // blue
 
@@ -29,6 +32,9 @@ public class FieldManager
 
     public void GenerateField(int rows, int cols, int layer)
     {
+        Rows = rows;
+        Cols = cols;
+
         _field = new Tile[rows, cols];
 
         for (int x = 0; x < rows; x++)

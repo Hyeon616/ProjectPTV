@@ -42,17 +42,19 @@ public class UnitManager
     private Unit CreateUnit(UnitData unitData, Owner owner, IUnitContainer slot, int unitLayer, int grade)
     {
 
-        Unit unit = _unitFactory.CreateUnit(unitData, owner, unitLayer, grade);
+        Unit unit = _unitFactory.CreateUnit(unitData, owner, unitLayer, grade, _fieldManager);
         MoveUnit(unit, slot);
         UpgradeUnits();
 
         return unit;
     }
 
-
+    #region Upgrade
 
     public void UpgradeUnits()
     {
+
+
         bool upgrade;
         Transform finalUpgradeTarget = null;
         List<Transform> allStartTransform = new List<Transform>();
@@ -86,7 +88,9 @@ public class UnitManager
             {
                 var unit = finalUpgradeTarget.GetComponentInChildren<Unit>();
                 if (unit != null && unit.UnitState.CurrentSlot.IsField)
+                {
                     unit.gameObject.SetActive(true);
+                }
 
             });
         }
@@ -138,11 +142,13 @@ public class UnitManager
             Object.Destroy(toUpgrade[i].gameObject);
         }
 
-        Unit newUnit = _unitFactory.CreateUnit(mainUnit.UnitState.UnitData, Owner.Player, (int)LayerNum.Unit, nextGrade);
+        Unit newUnit = _unitFactory.CreateUnit(mainUnit.UnitState.UnitData, Owner.Player, (int)LayerNum.Unit, nextGrade, _fieldManager);
         newUnit.gameObject.SetActive(false);
 
         newUnit.UnitState.PlaceUnit(spawnSlot);
         spawnSlot.SetUnit(newUnit);
+
+        newUnit.DefaultDirection();
 
         if (spawnSlot is BenchSlot benchSlotTransfrom)
             finalTargetTransform = benchSlotTransfrom.transform;
@@ -151,6 +157,7 @@ public class UnitManager
 
     }
 
+    #endregion
 
     private void CollectUnits()
     {
@@ -158,13 +165,13 @@ public class UnitManager
 
         foreach (var tile in _fieldManager.GetAllUnits())
         {
-            if (tile.Unit != null)
+            if (tile.Unit != null && tile.Unit.UnitState.Owner == Owner.Player)
                 CheckUnit(tile.Unit);
         }
 
         foreach (var slot in _benchUI.GetAllUnits())
         {
-            if (slot.Unit != null)
+            if (slot.Unit != null && slot.Unit.UnitState.Owner == Owner.Player)
                 CheckUnit(slot.Unit);
         }
 
@@ -190,6 +197,8 @@ public class UnitManager
         list.Add(unit);
 
     }
+
+    #region Move Unit
 
     public bool DragDrop(Unit unit, IUnitContainer target)
     {
@@ -219,6 +228,9 @@ public class UnitManager
 
         target.SetUnit(unit);
         unit.UnitState.PlaceUnit(target);
+
+        if (target.IsField)
+            unit.DefaultDirection();
     }
 
 
@@ -236,9 +248,14 @@ public class UnitManager
         currentUnit.UnitState.PlaceUnit(swapSlot);
         swapUnit.UnitState.PlaceUnit(currentSlot);
 
+        if (swapSlot.IsField)
+            currentUnit.DefaultDirection();
+
+        if (currentSlot.IsField)
+            swapUnit.DefaultDirection();
 
     }
 
-
+    #endregion
 
 }

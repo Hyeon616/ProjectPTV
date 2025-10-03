@@ -57,7 +57,7 @@ public class ShopUI : MonoBehaviour
         _shopManager.BuyUnit(unitData, grade, price);
 
         // ±¸¸Å ÈÄ ´Ý±â
-        //StartCoroutine(HideShop());
+        StartCoroutine(HideShop());
     }
 
     public void ShowShop()
