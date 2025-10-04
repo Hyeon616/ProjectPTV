@@ -42,22 +42,18 @@ public class Unit : MonoBehaviour
     private static readonly int SkillStateHash = Animator.StringToHash("Skill");
     private static readonly int DeathStateHash = Animator.StringToHash("Death");
 
-    [Header("UI")]
-    private Image[] _stars;
+    private UnitGradeUI _unitGradeUI;
 
     public void Init(UnitData unitData, Owner owner, int grade, FieldManager fieldManager)
     {
         UnitState = new UnitState(unitData, owner, grade);
         _fieldManager = fieldManager;
         _anim = GetComponent<Animator>();
-
+        _unitGradeUI = GetComponent<UnitGradeUI>();
         _attackTimer = 0f;
 
-
         DefaultDirection();
-        InitStarImage();
-        UpdateGradeUI();
-
+        _unitGradeUI.Init(UnitState);
     }
 
     public void StateUpdate()
@@ -641,30 +637,5 @@ public class Unit : MonoBehaviour
         DefaultDirection();
     }
 
-
-    #region Grade UI
-
-    private void UpdateGradeUI()
-    {
-        foreach (var star in _stars)
-            star.enabled = false;
-
-        for (int i = 0; i < UnitState.CurrentGrade && i < _stars.Length; i++)
-            _stars[i].enabled = true;
-
-    }
-
-    private void InitStarImage()
-    {
-        Transform starRoot = transform.Find("GradeCanvas/Star");
-        _stars = new Image[3];
-
-        for (int i = 0; i < _stars.Length; i++)
-        {
-            _stars[i] = starRoot.GetChild(i).GetComponent<Image>();
-        }
-    }
-
-    #endregion
 
 }
