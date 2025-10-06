@@ -32,11 +32,10 @@ public class StageManager : MonoBehaviour
     {
         if (!IsBattle) return;
 
-        foreach (var unit in _playerUnits)
-            unit?.StateUpdate();
-
-        foreach (var unit in _enemyUnits)
-            unit?.StateUpdate();
+        for (int i = 0; i < _playerUnits.Count; i++)
+            _playerUnits[i]?.StateUpdate();
+        for (int i = 0; i < _enemyUnits.Count; i++)
+            _enemyUnits[i]?.StateUpdate();
 
     }
 
@@ -44,40 +43,60 @@ public class StageManager : MonoBehaviour
     {
         StageWaveData stageData = _stageWaveData[_selectedStage];
 
-        while (_currentWave <= stageData._waves.Length)
+        _currentWave = 0;
+
+        for (int i = 0; i < stageData._waves.Length; i++)
         {
             yield return new WaitForSeconds(_waveInterval);
-            yield return StartCoroutine(StartWave(stageData._waves[_currentWave]));
-
+            yield return StartCoroutine(StartWave(stageData._waves[i]));
+            _currentWave = i + 1;
         }
 
         EndStage();
     }
 
 
-    public IEnumerator StartWave(WaveData waveData)
+    private IEnumerator StartWave(WaveData waveData)
     {
-        _currentWave++;
+        // 1) 적 스폰
         SpawnEnemyWave(waveData);
-        IsBattle = true;
 
+        // 2) 전장에 존재하는 유닛 목록 갱신
         AddFieldUnits();
 
-        foreach (var unit in _playerUnits)
-        {
-            unit?.FindTarget();
-        }
+        // 3) 전투 시작 플래그
+        IsBattle = true;
 
-        foreach (var unit in _enemyUnits)
+        // 4) 모든 유닛을 Idle로 세팅(유닛 FSM이 스스로 타겟을 찾고 Chase/Attack으로 전이)
+        foreach (var u in _playerUnits)
         {
-            unit?.FindTarget();
-        }
+            if (u != null)
+            {
+                u.RequestState(UnitActionState.Idle);
+                u.StateUpdate();
+            }
 
+        }
+        foreach (var u in _enemyUnits)
+        {
+            if (u != null)
+            {
+                u.RequestState(UnitActionState.Idle);
+                u.StateUpdate();
+            }
+
+        }
+        
+
+        // 5) 웨이브가 끝날 때까지 대기
         while (!IsBattleFinished())
             yield return null;
 
+        // 6) 웨이브 종료 처리
         OnWaveFinished();
         IsBattle = false;
+
+        yield break;
     }
 
     private void AddFieldUnits()
@@ -87,8 +106,7 @@ public class StageManager : MonoBehaviour
 
         foreach (var tile in _fieldSceneManager.FieldManager.GetAllUnits())
         {
-            if (tile.Unit == null)
-                continue;
+            if (tile.Unit == null) continue;
 
             if (tile.Unit.UnitState.Owner == Owner.Player)
             {
@@ -96,17 +114,19 @@ public class StageManager : MonoBehaviour
                 tile.Unit.SpawnTile(tile);
             }
             else if (tile.Unit.UnitState.Owner == Owner.Enemy)
+            {
                 _enemyUnits.Add(tile.Unit);
+            }
         }
     }
-
 
     private void SpawnEnemyWave(WaveData waveData)
     {
         foreach (var enemy in waveData.enemies)
         {
             Tile tile = _fieldSceneManager.FieldManager.GetTile(enemy._gridPos.x, enemy._gridPos.y);
-            _fieldSceneManager.UnitManager.SpawnUnitCoordinate(enemy._enemyUnit, Owner.Enemy, tile, (int)LayerNum.Unit, enemy.grade);
+            _fieldSceneManager.UnitManager
+                .SpawnUnitCoordinate(enemy._enemyUnit, Owner.Enemy, tile, (int)LayerNum.Unit, enemy.grade);
         }
     }
 
@@ -119,7 +139,6 @@ public class StageManager : MonoBehaviour
                 !tile.Unit.UnitState.IsDead)
                 return false;
         }
-
         return true;
     }
 
@@ -128,16 +147,15 @@ public class StageManager : MonoBehaviour
         foreach (var tile in _fieldSceneManager.FieldManager.GetAllUnits())
         {
             if (tile.Unit != null && tile.Unit.UnitState.Owner == Owner.Player)
-            {
                 tile.Unit.ResetWave();
-            }
         }
+
+        _enemyUnits.Clear();
     }
 
     private void EndStage()
     {
-        // TODO
         Debug.Log("stage끝");
+        //TODO 스테이지 클리어 UI/보상 등 처리
     }
-
 }

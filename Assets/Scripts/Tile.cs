@@ -1,4 +1,3 @@
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 
 public class Tile : MonoBehaviour, IUnitContainer
@@ -9,13 +8,15 @@ public class Tile : MonoBehaviour, IUnitContainer
     public int X { get; private set; }
     public int Y { get; private set; }
 
-
     public Unit ReservedUnit { get; private set; }
-
 
     private SpriteRenderer _renderer;
     private Color _defaultColor;
     private readonly Color _highlightColor = Color.yellow;
+
+    private Vector3 _centerLocalOffset = new Vector3(0f, 0.25f, 0f);
+    public Vector3 CenterLocal => _centerLocalOffset;
+    public Vector3 CenterWorld => transform.position + _centerLocalOffset;
 
     public void Init(int x, int y, bool isPlayerField)
     {
@@ -42,13 +43,20 @@ public class Tile : MonoBehaviour, IUnitContainer
         if (unit != null)
         {
             unit.gameObject.SetActive(true);
-            unit.transform.SetParent(transform);
-            unit.transform.localPosition = new Vector3(0, 0.25f, 0);
-
             unit.CurrentTile(this);
+            CenterUnit(unit);
         }
-
     }
+
+    public void CenterUnit(Unit unit)
+    {
+        if (unit == null)
+            return;
+
+        unit.transform.SetParent(transform);
+        unit.transform.localPosition = _centerLocalOffset;
+    }
+
     public void ReserveTile(Unit reserveUnit)
     {
         ReservedUnit = reserveUnit;

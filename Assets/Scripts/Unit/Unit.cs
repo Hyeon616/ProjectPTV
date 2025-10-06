@@ -1,34 +1,33 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Unit : MonoBehaviour
 {
-
     public UnitState UnitState { get; private set; }
+    public UnitServices Services { get; private set; }
 
-    private FieldManager _fieldManager;
+    #region Field Info
+    private Tile _spawnTile;
+    public Tile CurrentTileRef => _currentTile;
+    public Unit TargetRef => _target;
 
-    [Header("Move/Attack")]
     private float _moveSpeed = 1.5f;
     private float _attackTimer;
     private Unit _target;
     private Tile _currentTile;
     private Tile _nextTile;
-    private Tile _movingFromTile;                 
-    private Vector3 _targetWorldPos;             
-    private static readonly Vector3 LocalCenter = new Vector3(0f, 0.25f, 0f);
+    private Tile _movingFromTile;
+    private Vector3 _targetWorldPos;
+    #endregion
 
+    #region State Boolean
     private bool _isDying;
-    private bool _isAttacking;     
-    private bool _attackEventArmed;  
-    private bool _queueSkillAfterHit; 
+    private bool _isAttacking;
+    private bool _attackEventArmed;
+    private bool _queueSkillAfterHit;
+    #endregion
 
-    [Header("Reset")]
-    private Tile _spawnTile;
-
-    [Header("anim")]
+    #region Animation
     private Animator _anim;
     private Vector2 _lookDir;
     private static readonly int AnimState = Animator.StringToHash("State");
@@ -42,86 +41,137 @@ public class Unit : MonoBehaviour
     private static readonly int SkillStateHash = Animator.StringToHash("Skill");
     private static readonly int DeathStateHash = Animator.StringToHash("Death");
 
+    private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
+    private float _attackBaseDuration = -1f;
+    public void SetAttackBaseDuration(float duration) => _attackBaseDuration = duration;
+
+
+    #endregion
+
+    #region State
+    private IUnitState _state;
+    private readonly IdleState _idleState = new IdleState();
+    private readonly ChaseState _chaseState = new ChaseState();
+    private readonly AttackState _attackState = new AttackState();
+    private readonly SkillState _skillState = new SkillState();
+    private readonly DieState _dieState = new DieState();
+    #endregion
+
     private UnitGradeUI _unitGradeUI;
+
+    #region Property
+    public float MoveSpeed => _moveSpeed;
+    public float AttackTimer { get => _attackTimer; set => _attackTimer = value; }
+    public bool IsAttacking { get => _isAttacking; set => _isAttacking = value; }
+    public bool AttackEventArmed { get => _attackEventArmed; set => _attackEventArmed = value; }
+    public bool QueueSkillAfterHit { get => _queueSkillAfterHit; set => _queueSkillAfterHit = value; }
+    public bool IsDying { get => _isDying; set => _isDying = value; }
+
+    public Unit Target { get => _target; set => _target = value; }
+    public Tile MovingFromTile { get => _movingFromTile; set => _movingFromTile = value; }
+    public Tile NextTile { get => _nextTile; set => _nextTile = value; }
+    public Vector3 TargetWorldPos { get => _targetWorldPos; set => _targetWorldPos = value; }
+    public void CurrentTile(Tile tile) => _currentTile = tile;
+    public void SpawnTile(Tile tile) => _spawnTile = tile;
+    #endregion
 
     public void Init(UnitData unitData, Owner owner, int grade, FieldManager fieldManager)
     {
+
         UnitState = new UnitState(unitData, owner, grade);
-        _fieldManager = fieldManager;
+        Services = new UnitServices(fieldManager);
+
         _anim = GetComponent<Animator>();
         _unitGradeUI = GetComponent<UnitGradeUI>();
-        _attackTimer = 0f;
 
+        _attackTimer = 0f;
         DefaultDirection();
+
         _unitGradeUI.Init(UnitState);
+
+        RequestState(UnitActionState.Idle);
     }
+
+    #region State
 
     public void StateUpdate()
     {
-
-        switch (UnitState.CurrentState)
+        if (UnitState.IsDead || _isDying)
         {
-            case UnitActionState.Idle:
-                FindTarget();
-                break;
-            case UnitActionState.Chase:
-                ChaseState();
-                break;
-            case UnitActionState.Attack:
-                AttackState();
-                break;
-            case UnitActionState.Skill:
-                SkillState();
-                break;
-            case UnitActionState.Die:
-                DieState();
-                break;
+            if (UnitState.CurrentState != UnitActionState.Die)
+                RequestState(UnitActionState.Die);
 
+            _state?.Execute(this);
+            return;
         }
+
+        _state?.Execute(this);
     }
 
+    public void RequestState(UnitActionState next)
+    {
+        if ((UnitState.IsDead || _isDying) && next != UnitActionState.Die)
+            return;
 
-    private void SetLocomotionIdle() => _anim.SetInteger(AnimState, (int)UnitActionState.Idle);
-    private void SetLocomotionChase() => _anim.SetInteger(AnimState, (int)UnitActionState.Chase);
+        if (UnitState.CurrentState == next && _state != null)
+            return;
 
+        _state?.Exit(this);
 
+        UnitState.ChangeState(next);
+        switch (next)
+        {
+            case UnitActionState.Idle: _state = _idleState; break;
+            case UnitActionState.Chase: _state = _chaseState; break;
+            case UnitActionState.Attack: _state = _attackState; break;
+            case UnitActionState.Skill: _state = _skillState; break;
+            case UnitActionState.Die: _state = _dieState; break;
+        }
+
+        _state?.Enter(this);
+    }
+
+    public void SetLocomotionIdle() => _anim.SetInteger(AnimState, (int)UnitActionState.Idle);
+    public void SetLocomotionChase() => _anim.SetInteger(AnimState, (int)UnitActionState.Chase);
+
+    #endregion
+
+    #region Direction
 
     public void DefaultDirection()
     {
         _lookDir = UnitState.Owner == Owner.Player ? new Vector2(0, 1) : new Vector2(0, -1);
         _anim.SetFloat(DirX, _lookDir.x);
         _anim.SetFloat(DirY, _lookDir.y);
-
     }
 
-    private void UpdateDirection(Tile from, Tile to)
+    public void UpdateDirection(Tile from, Tile to)
     {
         int dx = to.X - from.X;
         int dy = to.Y - from.Y;
-
-        Vector2 dir;
-        if (Mathf.Abs(dx) > Mathf.Abs(dy))
-            dir = dx > 0 ? new Vector2(0, 1) : new Vector2(0, -1);  // X+ = N, X- = S
-        else
-            dir = dy > 0 ? new Vector2(-1, 0) : new Vector2(1, 0);   // Y+ = W, Y- = E
-
+        Vector2 dir = (Mathf.Abs(dx) > Mathf.Abs(dy))
+            ? (dx > 0 ? new Vector2(0, 1) : new Vector2(0, -1))  // X+ = N, X- = S
+            : (dy > 0 ? new Vector2(-1, 0) : new Vector2(1, 0));  // Y+ = W, Y- = E
         _anim.SetFloat(DirX, dir.x);
         _anim.SetFloat(DirY, dir.y);
     }
 
-    private void TriggerAttack()
+    #endregion
+
+    #region Trigger
+    public void TriggerAttack()
     {
         var st = _anim.GetCurrentAnimatorStateInfo(0);
         if (st.shortNameHash == AttackStateHash)
         {
-            _anim.Play(AttackStateHash, 0, 0f); 
+            _anim.Play(AttackStateHash, 0, 0f);
             return;
         }
         _anim.ResetTrigger(Attack);
         _anim.SetTrigger(Attack);
     }
 
-    private void TriggerSkill()
+    public void TriggerSkill()
     {
         var st = _anim.GetCurrentAnimatorStateInfo(0);
         if (st.shortNameHash == SkillStateHash)
@@ -133,403 +183,27 @@ public class Unit : MonoBehaviour
         _anim.SetTrigger(Skill);
     }
 
-    private void TriggerDie()
+    public void TriggerDie()
     {
         _anim.ResetTrigger(Death);
         _anim.SetTrigger(Death);
     }
+    #endregion
 
-    public void CurrentTile(Tile tile)
-    {
-        _currentTile = tile;
-    }
-
-    private void ChaseState()
-    {
-        // 0) 타겟 유효성
-        if (_target == null || _target.UnitState.IsDead)
-        {
-            FindTarget();
-            return;
-        }
-        if (_currentTile == null || _target._currentTile == null)
-            return;
-
-        // 1) 사거리 안이면 즉시 공격(이동 중이 아닐 때만)
-        if (IsInRange(_target) && _movingFromTile == null)
-        {
-            if (_nextTile != null) { _nextTile.ClearReserve(this); _nextTile = null; }
-
-            // 중앙 스냅 후 방향/공격 트리거
-            transform.SetParent(_currentTile.transform);
-            transform.localPosition = new Vector3(0f, 0.25f, 0f);
-
-            UpdateDirection(_currentTile, _target._currentTile);
-
-            UnitState.ChangeState(UnitActionState.Attack);
-            TriggerAttack();
-            _isAttacking = true;
-            _attackEventArmed = true;
-            _attackTimer = 0f;
-            return;
-        }
-
-        // 2) 먼저 경로 후보를 받아본다 (있으면 그걸로 이동 시작)
-        Tile candidateStep = null;
-        if (_movingFromTile == null && _nextTile == null)
-            candidateStep = FindNextTileTowardTarget();
-
-        if (_movingFromTile == null && _nextTile == null && candidateStep != null)
-        {
-            // (a) 다음 타일 예약
-            candidateStep.ReserveTile(this);
-
-            // (b) 시각 출발 타일 고정
-            _movingFromTile = _currentTile;
-
-            // (c) 출발 타일 논리 점유 해제
-            _movingFromTile?.ClearUnit();
-
-            // (d) 다음 타일을 **즉시 논리 점유** (사거리/경로/대치 판정은 여기 기준)
-            candidateStep.SetUnit(this);
-            UnitState.PlaceUnit(candidateStep);
-            _currentTile = candidateStep;
-            _nextTile = candidateStep;
-
-            // (e) 부모/로컬 위치는 출발 타일 기준으로 고정(부드럽게 이동)
-            if (_movingFromTile != null)
-            {
-                transform.SetParent(_movingFromTile.transform);
-                transform.localPosition = new Vector3(0f, 0.25f, 0f);
-            }
-
-            // (f) 월드 타겟 좌표 캐시 + 방향 갱신
-            _targetWorldPos = _currentTile.transform.position + new Vector3(0f, 0.25f, 0f);
-            UpdateDirection(_movingFromTile ?? _currentTile, _currentTile);
-        }
-        else if (_movingFromTile == null && _nextTile == null)
-        {
-            // 3) 이동할 후보가 "정말" 없을 때만 정면-동일사거리-사거리+1 홀드 적용
-            int dx = Mathf.Abs(_currentTile.X - _target._currentTile.X);
-            int dy = Mathf.Abs(_currentTile.Y - _target._currentTile.Y);
-            int md = dx + dy;
-
-            int myRange = UnitState.UnitStats._attackRange;
-            int enemyRange = _target.UnitState.UnitStats._attackRange;
-
-            bool sameRange = (myRange == enemyRange);
-            bool frontAlign = (dx == 0 || dy == 0);   // 상하좌우 직선
-            bool atRangePlus = (md == myRange + 1);
-
-            if (sameRange && frontAlign && atRangePlus)
-            {
-                // 여기서 멈춰 적이 들어오면 내가 선공
-                SetLocomotionIdle();
-                return;
-            }
-
-            // 위 조건도 아니고 후보도 없으면 그냥 체이스 포즈 유지
-            SetLocomotionChase();
-        }
-
-        // 4) 실제 이동 처리(시각적 보간)
-        if (_movingFromTile != null)
-        {
-            float step = _moveSpeed * Time.deltaTime;
-            float dist = Vector3.Distance(transform.position, _targetWorldPos);
-
-            if (dist <= step)
-            {
-                // 도착: 부모를 논리 타일로 맞추고 중앙 스냅, 예약 해제
-                transform.position = _targetWorldPos;
-                transform.SetParent(_currentTile.transform);
-                transform.localPosition = new Vector3(0f, 0.25f, 0f);
-
-                _currentTile.ClearReserve(this);
-
-                _movingFromTile = null;
-                _nextTile = null;
-                return;
-            }
-            else
-            {
-                transform.position = Vector3.MoveTowards(transform.position, _targetWorldPos, step);
-                return;
-            }
-        }
-
-        // 5) 그 외엔 이동 애니메이션 유지
-        SetLocomotionChase();
-    }
-
-    public void FindTarget()
-    {
-        _target = FindNearestEnemy();
-
-        if (_target != null)
-        {
-            if (IsInRange(_target))
-            {
-                UnitState.ChangeState(UnitActionState.Attack);
-                TriggerAttack();                     
-                _isAttacking = true;
-                _attackEventArmed = true;
-                _attackTimer = 0f;
-            }
-            else
-            {
-                UnitState.ChangeState(UnitActionState.Chase);
-                SetLocomotionChase();              
-            }
-        }
-        else
-        {
-            UnitState.ChangeState(UnitActionState.Idle);
-            SetLocomotionIdle();                 
-        }
-    }
-
-    // 타겟 기준으로 candidate가 어느 "면"에 있는지 평가: S=0, E=1, W=2, N=3
-    // Owner 별 선호 순서: Player = S(0)→E(1)→W(2)→N(3), Enemy = N(3)→E(1)→W(2)→S(0)
-    private int DirectionPriority(Tile candidate, Tile target, Owner owner)
-    {
-        int dx = candidate.X - target.X; // x+:N, x-:S
-        int dy = candidate.Y - target.Y; // y+:W, y-:E
-
-        // candidate가 어느 면에 "더 가깝게" 위치하는지 결정
-        int side; // 0:S, 1:E, 2:W, 3:N
-        if (Mathf.Abs(dx) >= Mathf.Abs(dy))
-        {
-            // 수직 성분이 더 크면 N/S 쪽
-            side = (dx < 0) ? 0 /*S*/ : 3 /*N*/;
-        }
-        else
-        {
-            // 수평 성분이 더 크면 E/W 쪽
-            side = (dy < 0) ? 1 /*E*/ : 2 /*W*/;
-        }
-
-        // 선호 순서 매핑
-        // 값이 작을수록 우선
-        switch (owner)
-        {
-            case Owner.Player:
-                // S(0)→E(1)→W(2)→N(3)
-                if (side == 0) return 0;
-                if (side == 1) return 1;
-                if (side == 2) return 2;
-                return 3; // N
-            case Owner.Enemy:
-                // N(3)→E(1)→W(2)→S(0)
-                if (side == 3) return 0;
-                if (side == 1) return 1;
-                if (side == 2) return 2;
-                return 3; // S
-            default:
-                return 10; // 안전장치
-        }
-    }
-
-    private Tile FindNextTileTowardTarget()
-    {
-        if (_target == null) return null;
-        if (!(_target.UnitState.CurrentSlot is Tile targetTile)) return null;
-        if (_currentTile == null) return null;
-
-        int rows = _fieldManager.Rows;
-        int cols = _fieldManager.Cols;
-        int range = UnitState.UnitStats._attackRange;
-
-        // 1) BFS로 모든 타일까지의 최단거리 계산
-        bool[,] visited = new bool[rows, cols];
-        int[,] dist = new int[rows, cols];
-        for (int x = 0; x < rows; x++)
-            for (int y = 0; y < cols; y++)
-                dist[x, y] = int.MaxValue;
-
-        Tile[,] parent = new Tile[rows, cols];
-        Queue<Tile> q = new Queue<Tile>();
-
-        visited[_currentTile.X, _currentTile.Y] = true;
-        dist[_currentTile.X, _currentTile.Y] = 0;
-        q.Enqueue(_currentTile);
-
-        int[] dx4 = { 1, -1, 0, 0 };
-        int[] dy4 = { 0, 0, 1, -1 };
-
-        while (q.Count > 0)
-        {
-            Tile cur = q.Dequeue();
-
-            for (int i = 0; i < 4; i++)
-            {
-                int nx = cur.X + dx4[i];
-                int ny = cur.Y + dy4[i];
-
-                if (nx < 0 || nx >= rows || ny < 0 || ny >= cols) continue;
-                if (visited[nx, ny]) continue;
-
-                Tile nxt = _fieldManager.GetTile(nx, ny);
-                // BFS는 "통과 가능"한 타일만 확장 (자신 or 비어있거나 자신이 예약 OK)
-                if (!nxt.IsFreeFor(this)) continue;
-
-                visited[nx, ny] = true;
-                dist[nx, ny] = dist[cur.X, cur.Y] + 1;
-                parent[nx, ny] = cur;
-                q.Enqueue(nxt);
-            }
-        }
-
-        // 2) "사거리 이내 & 점유 가능" 타일들을 후보로 수집
-        int bestDist = int.MaxValue;
-        int bestDirScore = int.MaxValue;
-        Tile bestGoal = null;
-
-        for (int x = 0; x < rows; x++)
-        {
-            for (int y = 0; y < cols; y++)
-            {
-                // dist가 유효하고, 그 타일에서 타겟까지 사거리 이내
-                if (dist[x, y] == int.MaxValue) continue;
-
-                int mdToTarget = Mathf.Abs(x - targetTile.X) + Mathf.Abs(y - targetTile.Y);
-                if (mdToTarget > range) continue;
-
-                Tile cand = _fieldManager.GetTile(x, y);
-                if (!cand.IsFreeFor(this)) continue; // 최종 도착 시점에도 점유 가능해야 함
-
-                int d = dist[x, y];
-                if (d < bestDist)
-                {
-                    bestDist = d;
-                    bestGoal = cand;
-                    bestDirScore = DirectionPriority(cand, targetTile, UnitState.Owner);
-                }
-                else if (d == bestDist)
-                {
-                    // 최단거리 동점이면 타겟 '면' 우선순위로 tie-break
-                    int dirScore = DirectionPriority(cand, targetTile, UnitState.Owner);
-                    if (dirScore < bestDirScore)
-                    {
-                        bestDirScore = dirScore;
-                        bestGoal = cand;
-                    }
-                }
-            }
-        }
-
-        if (bestGoal == null) return null;
-        if (bestGoal == _currentTile) return null;
-
-        // 3) bestGoal까지의 "첫 한 칸" 되짚기
-        Tile step = bestGoal;
-        Tile prev = parent[step.X, step.Y];
-        while (prev != null && prev != _currentTile)
-        {
-            step = prev;
-            prev = parent[step.X, step.Y];
-        }
-        return step;
-    }
-
-    private Unit FindNearestEnemy()
-    {
-        Unit nearest = null;
-        int minDist = int.MaxValue;
-
-        foreach (var tile in _fieldManager.GetAllUnits())
-        {
-            Unit enemy = tile.Unit;
-
-            if (enemy == null) continue;
-
-            if (enemy.UnitState.Owner == UnitState.Owner) continue;
-            if (enemy.UnitState.IsDead) continue;
-
-            if (!(UnitState.CurrentSlot is Tile myTile)) continue;
-            if (!(enemy.UnitState.CurrentSlot is Tile enemyTile)) continue;
-
-            int dx = Mathf.Abs(myTile.X - enemyTile.X);
-            int dy = Mathf.Abs(myTile.Y - enemyTile.Y);
-            int dist = dx + dy;
-
-            if (dist < minDist)
-            {
-                minDist = dist;
-                nearest = enemy;
-            }
-        }
-
-        return nearest;
-    }
-
-    private bool IsInRange(Unit target)
-    {
-        if (_currentTile == null || target == null || target._currentTile == null)
-            return false;
-
-        int md = Mathf.Abs(_currentTile.X - target._currentTile.X) + Mathf.Abs(_currentTile.Y - target._currentTile.Y);
-        return md <= UnitState.UnitStats._attackRange;
-    }
-
-    private void AttackState()
-    {
-        if (_movingFromTile != null)
-        {
-            UnitState.ChangeState(UnitActionState.Chase);
-            SetLocomotionChase();
-            _isAttacking = false;
-            _attackEventArmed = false;
-            return;
-        }
-
-        if (_target == null || _target.UnitState.IsDead)
-        {
-            UnitState.ChangeState(UnitActionState.Chase);
-            SetLocomotionChase();
-            _isAttacking = false;
-            _attackEventArmed = false;
-            return;
-        }
-
-        if (!IsInRange(_target))
-        {
-            UnitState.ChangeState(UnitActionState.Chase);
-            SetLocomotionChase();
-            _isAttacking = false;
-            _attackEventArmed = false;
-            _nextTile = null;
-            return;
-        }
-
-        if (_currentTile != null)
-        {
-            var center = _currentTile.transform.position + LocalCenter;
-            transform.position = center;
-            transform.SetParent(_currentTile.transform);
-        }
-
-        if (_target._currentTile != null && _currentTile != null)
-            UpdateDirection(_currentTile, _target._currentTile);
-
-        if (!_isAttacking)
-        {
-            _attackTimer += Time.deltaTime;
-            if (_attackTimer >= UnitState.UnitStats._attackInterval)
-            {
-                _attackTimer = 0f;
-                _isAttacking = true;
-                _attackEventArmed = true;
-                TriggerAttack();
-            }
-        }
-    }
-
+    #region AnimationEvent
     public void AnimEvent_AttackImpact()
     {
-        if (!_attackEventArmed) return;
-        if (_target == null || _target.UnitState.IsDead) return;
-        if (!IsInRange(_target)) return;
+        if (UnitState.IsDead || _isDying)
+            return;
+
+        if (!_attackEventArmed)
+            return;
+
+        if (_target == null || _target.UnitState.IsDead)
+            return;
+
+        if (!Services.Perception.IsInRange(this, _target))
+            return;
 
         _target.TakeDamage(UnitState.UnitStats._attack);
         UnitState.GainMp(UnitState.UnitStats._increaseMp);
@@ -537,7 +211,7 @@ public class Unit : MonoBehaviour
         if (UnitState._currentMp >= 100)
         {
             UnitState._currentMp = 100;
-            _queueSkillAfterHit = true; 
+            _queueSkillAfterHit = true;
         }
 
         _attackEventArmed = false;
@@ -545,66 +219,47 @@ public class Unit : MonoBehaviour
 
     public void AnimEvent_AttackEnd()
     {
+        if (UnitState.IsDead || _isDying)
+            return;
+
         _isAttacking = false;
+
+        _anim.SetFloat(AttackSpeed, 1f);
 
         if (_queueSkillAfterHit)
         {
             _queueSkillAfterHit = false;
-            UnitState.ChangeState(UnitActionState.Skill);
-            TriggerSkill();            
-            return;
+            RequestState(UnitActionState.Skill);
+            TriggerSkill();
         }
 
     }
 
     public void AnimEvent_SkillEnd()
     {
+        if (UnitState.IsDead || _isDying)
+            return;
+
         UnitState._currentMp = 0;
 
-        if (_target != null && !_target.UnitState.IsDead && IsInRange(_target))
+        if (_target != null && !_target.UnitState.IsDead && Services.Perception.IsInRange(this, _target))
         {
-            UnitState.ChangeState(UnitActionState.Attack);
+            RequestState(UnitActionState.Attack);
             _isAttacking = false;
             _attackEventArmed = false;
             _attackTimer = 0f;
         }
         else
         {
-            UnitState.ChangeState(UnitActionState.Chase);
+            RequestState(UnitActionState.Chase);
             SetLocomotionChase();
             _isAttacking = false;
             _attackEventArmed = false;
         }
     }
-
-    public void TakeDamage(int damage)
-    {
-        UnitState.TakeDamage(damage);
-        if (UnitState.IsDead)
-        {
-            UnitState.ChangeState(UnitActionState.Die);
-            TriggerDie();
-        }
-    }
-
-
-    private void SkillState()
-    {
-        //UnitState.UseSkill();
-
-
-    }
-
     public void AnimEvent_DeathEnd()
     {
         StartCoroutine(DeathDealy());
-    }
-
-    public void DieState()
-    {
-        if (_isDying) return;
-        _isDying = true;
-        TriggerDie();
     }
 
     private IEnumerator DeathDealy()
@@ -613,10 +268,41 @@ public class Unit : MonoBehaviour
         gameObject.SetActive(false);
         _currentTile?.ClearUnit();
     }
+    #endregion
 
-    public void SpawnTile(Tile tile)
+    public void TakeDamage(int damage)
     {
-        _spawnTile = tile;
+        if (UnitState.IsDead) return;
+
+        UnitState.TakeDamage(damage);
+        if (UnitState.IsDead)
+        {
+
+            _isDying = true;
+
+            _isAttacking = false;
+            _attackEventArmed = false;
+            _queueSkillAfterHit = false;
+            _attackTimer = 0f;
+
+            if (_nextTile != null)
+            {
+                _nextTile.ClearReserve(this);
+                _nextTile = null;
+            }
+
+            _movingFromTile = null;
+
+            _anim.ResetTrigger(Attack);
+            _anim.ResetTrigger(Skill);
+            _anim.SetFloat(AttackSpeed, 1f);
+
+            if (_currentTile != null)
+                _currentTile.CenterUnit(this);
+
+            RequestState(UnitActionState.Die);
+            TriggerDie();
+        }
     }
 
     public void ResetWave()
@@ -633,6 +319,17 @@ public class Unit : MonoBehaviour
             UnitState.PlaceUnit(_spawnTile);
 
         }
+
+        _anim.ResetTrigger(Attack);
+        _anim.ResetTrigger(Skill);
+        _anim.ResetTrigger(Death);
+        _anim.SetFloat(AttackSpeed, 1f);
+        _attackBaseDuration = -1f;
+        _anim.Rebind();
+        _anim.Update(0f);
+        _anim.SetInteger(AnimState, (int)UnitActionState.Idle);
+
+        RequestState(UnitActionState.Idle);
 
         DefaultDirection();
     }

@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public enum UnitActionState
 {
     Idle,
@@ -44,12 +46,7 @@ public class UnitState
         if (IsDead)
             return;
 
-        _currentHp -= amount;
-        if(_currentHp <= 0)
-        {
-            _currentHp = 0;
-            ChangeState(UnitActionState.Die);
-        }
+        _currentHp = Mathf.Max(0, _currentHp - amount);
     }
 
     public void GainMp(int amount)
