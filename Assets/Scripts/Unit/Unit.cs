@@ -96,6 +96,8 @@ public class Unit : MonoBehaviour
 
     public void StateUpdate()
     {
+        Services.Tick(Time.deltaTime);
+
         if (UnitState.IsDead || _isDying)
         {
             if (UnitState.CurrentState != UnitActionState.Die)
@@ -205,8 +207,8 @@ public class Unit : MonoBehaviour
         if (!Services.Perception.IsInRange(this, _target))
             return;
 
-        _target.TakeDamage(UnitState.UnitStats._attack);
-        UnitState.GainMp(UnitState.UnitStats._increaseMp);
+        int dmg = Services.Combat.ComputeAttackDamage(this, _target);
+        Services.Combat.DealDamage(this, _target, dmg);
 
         if (UnitState._currentMp >= 100)
         {
