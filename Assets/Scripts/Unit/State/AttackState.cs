@@ -5,7 +5,7 @@ public class AttackState : IUnitState
     
     public void Enter(Unit u)
     {
-        // 사거리 내면 즉시 트리거, 아니면 체이스
+        
         var t = u.Target ?? u.Services.Perception.FindTarget(u);
         u.Target = t;
 

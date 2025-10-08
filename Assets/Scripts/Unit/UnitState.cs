@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum UnitActionState
@@ -26,6 +27,9 @@ public class UnitState
     public int _currentMp;
     public bool IsDead => _currentHp <= 0;
 
+    public event Action<int, int> OnHpChanged;
+    public event Action<int, int> OnMpChanged;
+
     public UnitState(UnitData unitData, Owner owner, int grade)
     {
         UnitData = unitData;
@@ -47,6 +51,7 @@ public class UnitState
             return;
 
         _currentHp = Mathf.Max(0, _currentHp - amount);
+        OnHpChanged?.Invoke(_currentHp, UnitStats._hp);
     }
 
     public void GainMp(int amount)
@@ -54,6 +59,15 @@ public class UnitState
         _currentMp += amount;
         if (_currentMp > 100)
             _currentMp = 100;
+        OnMpChanged?.Invoke(_currentMp, 100);
+    }
+
+    public void SpendMp(int amount)
+    {
+        _currentMp -= amount;
+        if (_currentMp <= 0) 
+            _currentMp = 0;
+        OnMpChanged?.Invoke(_currentMp, 100);
     }
 
     public void ResetForWave()
@@ -61,6 +75,8 @@ public class UnitState
         _currentHp = UnitStats._hp;
         _currentMp = 0;
         ChangeState(UnitActionState.Idle);
+        OnHpChanged?.Invoke(_currentHp, UnitStats._hp);
+        OnMpChanged?.Invoke(_currentMp, 100);
     }
 
 

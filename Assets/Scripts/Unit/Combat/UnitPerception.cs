@@ -50,7 +50,7 @@ public class UnitPerception
         foreach (var tile in _field.GetAllUnits())
         {
             var u = tile.Unit;
-            if( u!=null && u.UnitState.Owner != self.UnitState.Owner && !u.UnitState.IsDead)
+            if (u != null && u.UnitState.Owner != self.UnitState.Owner && !u.UnitState.IsDead)
                 list.Add(u);
         }
         return list;
@@ -58,33 +58,37 @@ public class UnitPerception
 
     public List<Unit> GetUnitsInRange(Unit self, int radius, bool onlyAllies, bool centerIsCaster = false)
     {
-        var outList = new List<Unit>();
-        var center = centerIsCaster ? self.CurrentTileRef : self.TargetRef?.CurrentTileRef;
-        if(center == null)
-            center = self.CurrentTileRef;
-        if(center ==null)
-            return outList;
+        var result = new List<Unit>();
+
+        if (self == null || self.UnitState == null) 
+            return result;
+        if (self.UnitState.IsDead) 
+            return result;         
+
+        Tile center = centerIsCaster ? self.CurrentTileRef
+                                     : (self.TargetRef != null ? self.TargetRef.CurrentTileRef : null);
+        if (center == null) return result;
 
         foreach (var tile in _field.GetAllUnits())
-        { 
-            if(tile.Unit == self)
+        {
+
+            if (tile.Unit.UnitState == null || tile.Unit.UnitState.IsDead)
                 continue;
 
-            if(onlyAllies && tile.Unit.UnitState.Owner != self.UnitState.Owner)
+            if (onlyAllies && tile.Unit.UnitState.Owner != self.UnitState.Owner)
                 continue;
 
-            if(!onlyAllies && tile.Unit.UnitState.Owner == self.UnitState.Owner)
+            if (!onlyAllies && tile.Unit.UnitState.Owner == self.UnitState.Owner)
                 continue;
 
-            if(tile.Unit.UnitState.IsDead)
-                continue;
+
 
             int md = Mathf.Abs(tile.X - center.X) + Mathf.Abs(tile.Y - center.Y);
             if (md <= radius)
-                outList.Add(tile.Unit);
+                result.Add(tile.Unit);
         }
 
-        return outList;
+        return result;
     }
 
     public List<Tile> GetTilesInManhattan(Tile center, int radius)

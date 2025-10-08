@@ -57,9 +57,13 @@ public class Unit : MonoBehaviour
     private readonly DieState _dieState = new DieState();
     #endregion
 
+    #region UI
     private UnitGradeUI _unitGradeUI;
+    private UnitStatusPresenter _unitStatusPresenter;
+    #endregion
 
     #region Property
+
     public float MoveSpeed => _moveSpeed;
     public float AttackTimer { get => _attackTimer; set => _attackTimer = value; }
     public bool IsAttacking { get => _isAttacking; set => _isAttacking = value; }
@@ -83,11 +87,14 @@ public class Unit : MonoBehaviour
 
         _anim = GetComponent<Animator>();
         _unitGradeUI = GetComponent<UnitGradeUI>();
+        _unitStatusPresenter = GetComponent<UnitStatusPresenter>();
 
         _attackTimer = 0f;
         DefaultDirection();
 
         _unitGradeUI.Init(UnitState);
+        _unitStatusPresenter.Bind(UnitState);
+        _unitStatusPresenter.ResetUI(UnitState._currentHp, UnitState.UnitStats._hp, UnitState._currentMp, 100);
 
         RequestState(UnitActionState.Idle);
     }
@@ -96,7 +103,6 @@ public class Unit : MonoBehaviour
 
     public void StateUpdate()
     {
-        Services.Tick(Time.deltaTime);
 
         if (UnitState.IsDead || _isDying)
         {
@@ -106,6 +112,7 @@ public class Unit : MonoBehaviour
             _state?.Execute(this);
             return;
         }
+        Services.Tick(Time.deltaTime);
 
         _state?.Execute(this);
     }
@@ -210,6 +217,8 @@ public class Unit : MonoBehaviour
         int dmg = Services.Combat.ComputeAttackDamage(this, _target);
         Services.Combat.DealDamage(this, _target, dmg);
 
+        UnitState.GainMp(UnitState.UnitStats._increaseMp);
+
         if (UnitState._currentMp >= 100)
         {
             UnitState._currentMp = 100;
@@ -234,7 +243,6 @@ public class Unit : MonoBehaviour
             RequestState(UnitActionState.Skill);
             TriggerSkill();
         }
-
     }
 
     public void AnimEvent_SkillEnd()
@@ -242,7 +250,7 @@ public class Unit : MonoBehaviour
         if (UnitState.IsDead || _isDying)
             return;
 
-        UnitState._currentMp = 0;
+        UnitState.SpendMp(UnitState._currentMp);
 
         if (_target != null && !_target.UnitState.IsDead && Services.Perception.IsInRange(this, _target))
         {
@@ -259,6 +267,7 @@ public class Unit : MonoBehaviour
             _attackEventArmed = false;
         }
     }
+
     public void AnimEvent_DeathEnd()
     {
         StartCoroutine(DeathDealy());
@@ -279,7 +288,6 @@ public class Unit : MonoBehaviour
         UnitState.TakeDamage(damage);
         if (UnitState.IsDead)
         {
-
             _isDying = true;
 
             _isAttacking = false;
@@ -302,6 +310,8 @@ public class Unit : MonoBehaviour
             if (_currentTile != null)
                 _currentTile.CenterUnit(this);
 
+            Services.Status.ClearAll(this);
+
             RequestState(UnitActionState.Die);
             TriggerDie();
         }
@@ -309,8 +319,20 @@ public class Unit : MonoBehaviour
 
     public void ResetWave()
     {
+        StopAllCoroutines();
+
         gameObject.SetActive(true);
+
         _isDying = false;
+        _isAttacking = false;
+        _attackEventArmed = false;
+        _queueSkillAfterHit = false;
+
+        _attackTimer = 0f;
+        _movingFromTile = null;
+        _nextTile = null;
+        _target = null;
+
         UnitState.ResetForWave();
 
         if (_spawnTile != null)
@@ -321,6 +343,8 @@ public class Unit : MonoBehaviour
             UnitState.PlaceUnit(_spawnTile);
 
         }
+
+        Services.Status.ClearAll(this);
 
         _anim.ResetTrigger(Attack);
         _anim.ResetTrigger(Skill);

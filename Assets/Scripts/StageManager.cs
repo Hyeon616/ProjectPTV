@@ -58,41 +58,38 @@ public class StageManager : MonoBehaviour
 
     private IEnumerator StartWave(WaveData waveData)
     {
-        // 1) 적 스폰
         SpawnEnemyWave(waveData);
-
-        // 2) 전장에 존재하는 유닛 목록 갱신
         AddFieldUnits();
 
-        // 3) 전투 시작 플래그
         IsBattle = true;
 
-        // 4) 모든 유닛을 Idle로 세팅(유닛 FSM이 스스로 타겟을 찾고 Chase/Attack으로 전이)
         foreach (var u in _playerUnits)
         {
             if (u != null)
             {
+                if (u == null) continue;
+                u.Target = null;
+
                 u.RequestState(UnitActionState.Idle);
                 u.StateUpdate();
             }
-
         }
         foreach (var u in _enemyUnits)
         {
             if (u != null)
             {
+                if (u == null) continue;
+                u.Target = null;
+
                 u.RequestState(UnitActionState.Idle);
                 u.StateUpdate();
             }
 
         }
         
-
-        // 5) 웨이브가 끝날 때까지 대기
         while (!IsBattleFinished())
             yield return null;
 
-        // 6) 웨이브 종료 처리
         OnWaveFinished();
         IsBattle = false;
 
@@ -144,10 +141,21 @@ public class StageManager : MonoBehaviour
 
     private void OnWaveFinished()
     {
+        for (int i = 0; i < _playerUnits.Count; i++)
+        {
+            var u = _playerUnits[i];
+            if (u != null)
+                u.ResetWave();
+        }
+
         foreach (var tile in _fieldSceneManager.FieldManager.GetAllUnits())
         {
-            if (tile.Unit != null && tile.Unit.UnitState.Owner == Owner.Player)
-                tile.Unit.ResetWave();
+            if (tile.Unit != null && tile.Unit.UnitState.Owner == Owner.Enemy)
+            {
+                
+                tile.Unit.gameObject.SetActive(false);
+                tile.ClearUnit();
+            }
         }
 
         _enemyUnits.Clear();
