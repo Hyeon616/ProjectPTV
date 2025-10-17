@@ -341,7 +341,6 @@ public class Unit : MonoBehaviour
             _currentTile = _spawnTile;
             _spawnTile.SetUnit(this);
             UnitState.PlaceUnit(_spawnTile);
-
         }
 
         Services.Status.ClearAll(this);
@@ -355,9 +354,9 @@ public class Unit : MonoBehaviour
         _anim.Update(0f);
         _anim.SetInteger(AnimState, (int)UnitActionState.Idle);
 
-        RequestState(UnitActionState.Idle);
-
         DefaultDirection();
+
+        RequestState(UnitActionState.Idle);
     }
 
 

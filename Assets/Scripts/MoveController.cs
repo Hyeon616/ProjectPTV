@@ -27,9 +27,14 @@ public class MoveController : MonoBehaviour
 
     }
 
-
     private void Update()
     {
+        if (_stageManager.IsBattle && _dragUnit != null)
+        {
+            CancelDrag(battleStarted: true);
+            return;
+        }
+
 #if UNITY_EDITOR
         if (Input.GetMouseButtonDown(0))
             OnTouchDown(Input.mousePosition);
@@ -55,7 +60,6 @@ public class MoveController : MonoBehaviour
     private void OnTouchDown(Vector2 screenPos)
     {
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
-
 
         PointerEventData eventData = new PointerEventData(EventSystem.current) { position = screenPos };
         List<RaycastResult> results = new List<RaycastResult>();
@@ -83,10 +87,9 @@ public class MoveController : MonoBehaviour
             return;
         }
 
-        if (_stageManager != null && _stageManager.IsBattle)
+        if (_stageManager.IsBattle)
             return;
 
-        // Field
         Collider2D hit = Physics2D.OverlapPoint(pos, _unitLayer);
         if (hit != null)
         {
@@ -111,11 +114,15 @@ public class MoveController : MonoBehaviour
         if (_dragUnit == null)
             return;
 
+        if (_stageManager.IsBattle)
+        {
+            CancelDrag(battleStarted: true);
+            return;
+        }
+
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
-        // 드래그 중
         _dragUnit.transform.position = new Vector3(pos.x, pos.y + 0.4f, _dragUnit.transform.position.z);
 
-        // 하이라이트 처리
         Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
         Tile targetTile = hit != null ? hit.GetComponent<Tile>() : null;
 
@@ -137,10 +144,16 @@ public class MoveController : MonoBehaviour
         if (_dragUnit == null)
             return;
 
+        if (_stageManager.IsBattle)
+        {
+            CancelDrag(battleStarted: true);
+            return;
+        }
+
         Vector2 pos = _mainCamera.ScreenToWorldPoint(screenPos);
         IUnitContainer target = null;
 
-        if(!(_stageManager != null && _stageManager.IsBattle))
+        if (!(_stageManager != null && _stageManager.IsBattle))
         {
             Collider2D hit = Physics2D.OverlapPoint(pos, _tileLayer);
             if (hit != null) target = hit.GetComponent<IUnitContainer>();
@@ -172,7 +185,24 @@ public class MoveController : MonoBehaviour
             if (_currentSlot != null)
             {
                 _currentSlot.SetUnit(_dragUnit);
-                _dragUnit.gameObject.SetActive(!_currentSlot.IsField ? false : true);
+                _dragUnit.UnitState.PlaceUnit(_currentSlot);        
+                _dragUnit.gameObject.SetActive(_currentSlot.IsField);
+                if (_currentSlot.IsField) 
+                    _dragUnit.DefaultDirection();
+
+                _dragUnit.MovingFromTile = null;
+                _dragUnit.NextTile = null;
+                _dragUnit.IsAttacking = false;
+                _dragUnit.AttackEventArmed = false;
+                _dragUnit.Target = null;
+
+                if (_stageManager != null && _stageManager.IsBattle)
+                {
+                    _dragUnit.RequestState(UnitActionState.Idle);
+                    _dragUnit.SetLocomotionIdle();
+                    _dragUnit.StateUpdate();
+                }
+
             }
             else
             {
@@ -191,6 +221,43 @@ public class MoveController : MonoBehaviour
 
     }
 
+    private void CancelDrag(bool battleStarted)
+    {
+        if (_dragUnit == null) return;
 
+        if (_currentSlot != null)
+        {
+            _currentSlot.SetUnit(_dragUnit);
+            _dragUnit.UnitState.PlaceUnit(_currentSlot);           
+            _dragUnit.gameObject.SetActive(_currentSlot.IsField);
+            if (_currentSlot.IsField) _dragUnit.DefaultDirection();
+
+            _dragUnit.MovingFromTile = null;
+            _dragUnit.NextTile = null;
+            _dragUnit.IsAttacking = false;
+            _dragUnit.AttackEventArmed = false;
+            _dragUnit.Target = null;
+
+            if (battleStarted)
+            {
+                _dragUnit.RequestState(UnitActionState.Idle);
+                _dragUnit.SetLocomotionIdle();
+                _dragUnit.StateUpdate();
+            }
+        }
+        else
+        {
+            _dragUnit.transform.position = _currentPos;
+        }
+
+        if (_highlightTile != null)
+        {
+            _highlightTile.HighlightTargetTile(false);
+            _highlightTile = null;
+        }
+
+        _dragUnit = null;
+        _fieldSceneManager.FieldManager.HideField();
+    }
 
 }

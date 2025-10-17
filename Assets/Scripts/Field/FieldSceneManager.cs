@@ -58,7 +58,6 @@ public class FieldSceneManager : MonoBehaviour
         _unitManager.SpawnUnitCoordinate(unitdata1, Owner.Player, _fieldManager.GetTile(0, 3), (int)LayerNum.Unit, 1);
         _unitManager.SpawnUnitCoordinate(unitdata1, Owner.Player, _fieldManager.GetTile(0, 2), (int)LayerNum.Unit, 1);
 
-        //_unitManager.SpawnUnit(unitdata1, Owner.Player, (int)LayerNum.Unit, 1);
         _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 1);
         _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 1);
         _unitManager.SpawnUnit(unitdata2, Owner.Player, (int)LayerNum.Unit, 1);

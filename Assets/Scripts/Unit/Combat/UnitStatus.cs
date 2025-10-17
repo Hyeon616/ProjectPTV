@@ -15,10 +15,13 @@ public class UnitStatus
     private Dictionary<Unit, float> _multiHitSkill = new Dictionary<Unit, float>();
     private Dictionary<Unit, float> _attackSkill = new Dictionary<Unit, float>();
     private Dictionary<Unit, float> _attackSpeedSkill = new Dictionary<Unit, float>();
+    private Dictionary<Unit, float> _guardSkill = new Dictionary<Unit, float>();
 
-    private readonly HashSet<Unit> _invincibility = new HashSet<Unit>();
+    private HashSet<Unit> _invincibility = new HashSet<Unit>();
+
     private Dictionary<Unit, (int stacks, float percent)> _lifeSteal = new Dictionary<Unit, (int stacks, float percent)>();
     private Dictionary<Unit, float> _critNext = new Dictionary<Unit, float>();
+    private Dictionary<Unit, bool> _lastHitCrit = new Dictionary<Unit, bool>();
 
     private Dictionary<Unit, (float radius, float dps, float timeLeft)> _dotAura = new Dictionary<Unit, (float radius, float dps, float timeLeft)>();
 
@@ -29,20 +32,43 @@ public class UnitStatus
 
     private static void SetMul(Dictionary<Unit, float> dict, Unit u, float value)
     {
-        if (Approximately(value, 1f)) dict.Remove(u);
-        else dict[u] = value;
+        if (Approximately(value, 1f))
+            dict.Remove(u);
+        else
+            dict[u] = value;
     }
 
     private static bool Approximately(float a, float b) => Mathf.Abs(a - b) < 0.0001f;
 
-    private static bool IsGone(Unit u)
+    private static bool IsDead(Unit u)
     {
         return u == null || u.UnitState == null || u.UnitState.IsDead || !u.gameObject.activeInHierarchy;
     }
 
+    public void GuardSkill(Unit u, float mul, float duration)
+    {
+        if (u == null)
+            return;
+
+        var cur = GetMul(_guardSkill, u);
+        cur *= mul;
+        SetMul(_guardSkill, u, cur);
+
+        AddTimer(u, duration, () =>
+        {
+            if (_guardSkill.TryGetValue(u, out var v))
+            {
+                v /= mul;
+                SetMul(_guardSkill, u, v);
+            }
+        });
+    }
+
     public void MultiHitSkill(Unit u, float mul, float duration)
     {
-        if (u == null) return;
+        if (u == null)
+            return;
+
         var cur = GetMul(_multiHitSkill, u);
         cur *= mul;
         SetMul(_multiHitSkill, u, cur);
@@ -122,6 +148,7 @@ public class UnitStatus
     public float MultiHit(Unit u) => GetMul(_multiHitSkill, u);
     public float AttackSkill(Unit u) => GetMul(_attackSkill, u);
     public float AttackSpeedSkill(Unit u) => GetMul(_attackSpeedSkill, u);
+    public float GuardBuff(Unit u) => GetMul(_guardSkill, u);
     public bool IsInvincibility(Unit u) => _invincibility.Contains(u);
 
     public float ConsumeCrit(Unit u)
@@ -130,10 +157,23 @@ public class UnitStatus
         if (_critNext.TryGetValue(u, out var v) && v > 1f)
         {
             _critNext.Remove(u);
+            _lastHitCrit[u] = true;
             return v;
         }
+        _lastHitCrit[u] = false;
         return 1f;
     }
+
+    public bool IsCriticalHit(Unit u)
+    {
+        if (_lastHitCrit.TryGetValue(u, out bool isCrit))
+        {
+            _lastHitCrit.Remove(u);
+            return isCrit;
+        }
+        return false;
+    }
+
 
     public float ApplyLifeSteal(Unit u, int damage)
     {
@@ -149,29 +189,38 @@ public class UnitStatus
         return 0f;
     }
 
-
     public void Tick(UnitServices service, float dt)
     {
-        
+
         var toRemove = new HashSet<Unit>();
 
         foreach (var kv in _timers)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
-
+            if (IsDead(kv.Key))
+                toRemove.Add(kv.Key);
         foreach (var kv in _multiHitSkill)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
+            if (IsDead(kv.Key)) 
+                toRemove.Add(kv.Key);
         foreach (var kv in _attackSkill)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
+            if (IsDead(kv.Key))
+                toRemove.Add(kv.Key);
         foreach (var kv in _attackSpeedSkill)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
+            if (IsDead(kv.Key))
+                toRemove.Add(kv.Key);
         foreach (var u in _invincibility)
-            if (IsGone(u)) toRemove.Add(u);
+            if (IsDead(u)) 
+                toRemove.Add(u);
         foreach (var kv in _lifeSteal)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
+            if (IsDead(kv.Key))
+                toRemove.Add(kv.Key);
         foreach (var kv in _critNext)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
+            if (IsDead(kv.Key))
+                toRemove.Add(kv.Key);
         foreach (var kv in _dotAura)
-            if (IsGone(kv.Key)) toRemove.Add(kv.Key);
+            if (IsDead(kv.Key)) 
+                toRemove.Add(kv.Key);
+        foreach (var kv in _guardSkill)
+            if (IsDead(kv.Key))
+                toRemove.Add(kv.Key);
 
         if (toRemove.Count > 0)
         {
@@ -194,7 +243,6 @@ public class UnitStatus
             }
         }
 
-
         var auraKeys = new List<Unit>(_dotAura.Keys);
         foreach (var caster in auraKeys)
         {
@@ -209,18 +257,21 @@ public class UnitStatus
 
             _dotAura[caster] = entry;
 
-            if (service == null || service.Perception == null || service.Combat == null) continue;
+            if (service == null || service.Perception == null || service.Combat == null) 
+                continue;
 
             float tickDamage = entry.dps * dt;
-            if (tickDamage <= 0f) continue;
+            if (tickDamage <= 0f) 
+                continue;
 
             var enemies = service.Perception.GetUnitsInRange(
                 caster, (int)entry.radius, onlyAllies: false, centerIsCaster: true);
 
-            if (enemies == null) continue;
+            if (enemies == null)
+                continue;
             foreach (var e in enemies)
             {
-                if (IsGone(e)) continue;
+                if (IsDead(e)) continue;
                 service.Combat.DealDamage(caster, e, Mathf.FloorToInt(tickDamage));
             }
         }
@@ -228,7 +279,8 @@ public class UnitStatus
 
     public void ClearAll(Unit u)
     {
-        if (u == null) return;
+        if (u == null) 
+            return;
         RemoveUnitFromAll(u);
     }
 
@@ -254,6 +306,8 @@ public class UnitStatus
         _lifeSteal.Remove(u);
         _critNext.Remove(u);
         _dotAura.Remove(u);
+        _lastHitCrit.Remove(u);
+        _guardSkill.Remove(u);
     }
 
     private void AddTimer(Unit u, float duration, Action onEnd)

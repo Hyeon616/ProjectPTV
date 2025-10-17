@@ -7,10 +7,9 @@ public class StageManager : MonoBehaviour
     [SerializeField] private FieldSceneManager _fieldSceneManager;
     [SerializeField] private List<StageWaveData> _stageWaveData = new List<StageWaveData>();
 
-    private readonly float _waveInterval = 5f;
+    private readonly float _waveInterval = 10f;
 
     private int _selectedStage = 0;
-    private int _currentWave = 0;
 
     public bool IsBattle { get; private set; }
 
@@ -43,13 +42,10 @@ public class StageManager : MonoBehaviour
     {
         StageWaveData stageData = _stageWaveData[_selectedStage];
 
-        _currentWave = 0;
-
         for (int i = 0; i < stageData._waves.Length; i++)
         {
             yield return new WaitForSeconds(_waveInterval);
             yield return StartCoroutine(StartWave(stageData._waves[i]));
-            _currentWave = i + 1;
         }
 
         EndStage();
@@ -59,18 +55,22 @@ public class StageManager : MonoBehaviour
     private IEnumerator StartWave(WaveData waveData)
     {
         SpawnEnemyWave(waveData);
+        IsBattle = true;
+
+        yield return null;
+
         AddFieldUnits();
 
-        IsBattle = true;
 
         foreach (var u in _playerUnits)
         {
             if (u != null)
             {
-                if (u == null) continue;
-                u.Target = null;
+                if (u == null) 
+                    continue;
 
-                u.RequestState(UnitActionState.Idle);
+                u.Target = null;
+                u.RequestState(UnitActionState.Chase);
                 u.StateUpdate();
             }
         }
@@ -78,10 +78,11 @@ public class StageManager : MonoBehaviour
         {
             if (u != null)
             {
-                if (u == null) continue;
-                u.Target = null;
+                if (u == null) 
+                    continue;
 
-                u.RequestState(UnitActionState.Idle);
+                u.Target = null;
+                u.RequestState(UnitActionState.Chase);
                 u.StateUpdate();
             }
 
@@ -93,7 +94,6 @@ public class StageManager : MonoBehaviour
         OnWaveFinished();
         IsBattle = false;
 
-        yield break;
     }
 
     private void AddFieldUnits()

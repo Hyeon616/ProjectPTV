@@ -24,13 +24,17 @@ public class UnitCombat
         if (target.UnitState.IsDead)
             return;
 
-        if (_services.Status.IsInvincibility(target))
+        if (target.Services.Status.IsInvincibility(target))
             return;
 
-        float hitUnit = _services.Status.MultiHit(target);
+        float hitUnit = target.Services.Status.GuardBuff(target);
         int dmg = Mathf.Max(0, Mathf.RoundToInt(rawDamage * hitUnit));
 
         target.TakeDamage(dmg);
+
+        bool isCrit = _services.Status.IsCriticalHit(attacker);
+
+        DamageTextManager.Instance.ShowDamage(attacker, target, dmg, isCrit);
 
         int heal = Mathf.RoundToInt(_services.Status.ApplyLifeSteal(attacker, dmg));
         if (heal > 0)
