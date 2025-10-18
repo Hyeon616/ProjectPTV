@@ -11,21 +11,28 @@ public class AttackAnimationSpeed : StateMachineBehaviour
 
     public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        _applied = ApplySpeed(animator, layerIndex);
+        var unit = animator.GetComponent<Unit>();
+        if (unit == null) return;
+
+        var clips = animator.GetCurrentAnimatorClipInfo(layerIndex);
+        if (clips == null || clips.Length == 0 || clips[0].clip == null) return;
+
+        // 길이만 캐시. 속도는 절대 여기서 만지지 않음
+        unit.SetAttackBaseDuration(clips[0].clip.length);
     }
 
-    public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
-    {
-        if (_applied) return;
-        _applied = ApplySpeed(animator, layerIndex);
-    }
+    //public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    //{
+    //    if (_applied) return;
+    //    _applied = ApplySpeed(animator, layerIndex);
+    //}
 
-    public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
-    {
-        animator.SetFloat(AttackSpeed, 1f);
-        _applied = false;
-        _baseDuration = 0f;
-    }
+    //public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    //{
+    //    animator.SetFloat(AttackSpeed, 1f);
+    //    _applied = false;
+    //    _baseDuration = 0f;
+    //}
 
     private bool ApplySpeed(Animator animator, int layer)
     {

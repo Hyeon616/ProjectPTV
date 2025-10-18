@@ -423,7 +423,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _effectCanvas: {fileID: 1621523604}
   _upgradeEffect: {fileID: 3590426312670909578, guid: 6219c03314eaad7468742e61488087d0, type: 3}
-  _hitFx: {fileID: 0}
+  _hitFx: {fileID: 5024009746357069194, guid: ec3f674830402cc45bce805cf6493db7, type: 3}
   _ArcherSkill: {fileID: 6202462865118328157, guid: bc330a95b74500d4f883c68f56579840, type: 3}
   _camoArcherBuff: {fileID: 5417173692537643869, guid: 44ba0d323640484469a7cc4a6a790679, type: 3}
   _darkLordAura: {fileID: 8593745086236250973, guid: dfacd4e80e2284c4aa47f810ee03aecd, type: 3}

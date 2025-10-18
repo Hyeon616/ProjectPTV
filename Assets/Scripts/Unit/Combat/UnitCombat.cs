@@ -36,6 +36,8 @@ public class UnitCombat
 
         DamageTextManager.Instance.ShowDamage(attacker, target, dmg, isCrit);
 
+        _services.Vfx.PlayHitEffect(target);
+
         int heal = Mathf.RoundToInt(_services.Status.ApplyLifeSteal(attacker, dmg));
         if (heal > 0)
             Heal(attacker, heal);

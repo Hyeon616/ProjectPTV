@@ -170,14 +170,20 @@ public class Unit : MonoBehaviour
     #region Trigger
     public void TriggerAttack()
     {
-        var st = _anim.GetCurrentAnimatorStateInfo(0);
-        if (st.shortNameHash == AttackStateHash)
-        {
-            _anim.Play(AttackStateHash, 0, 0f);
-            return;
-        }
-        _anim.ResetTrigger(Attack);
-        _anim.SetTrigger(Attack);
+        float attackInterval = Mathf.Max(UnitState.UnitStats._attackInterval, 0.0001f);
+        float attackSpeed = 1f;
+
+        if (_attackBaseDuration > 0f)
+            attackSpeed = Mathf.Clamp(_attackBaseDuration / attackInterval, 0.1f, 5f);
+
+        _anim.SetFloat(AttackSpeed, attackSpeed);
+
+        _isAttacking = true;
+        _attackEventArmed = true;
+        _attackTimer = 0f;
+
+        const float transition = 0.05f;
+        _anim.CrossFadeInFixedTime(AttackStateHash, transition, 0, 0f);
     }
 
     public void TriggerSkill()
@@ -206,7 +212,10 @@ public class Unit : MonoBehaviour
             return;
 
         if (!_attackEventArmed)
+        {
+            Debug.Log("_attackEventArmed false");
             return;
+        }
 
         if (_target == null || _target.UnitState.IsDead)
             return;
@@ -216,7 +225,7 @@ public class Unit : MonoBehaviour
 
         int dmg = Services.Combat.ComputeAttackDamage(this, _target);
         Services.Combat.DealDamage(this, _target, dmg);
-
+        
         UnitState.GainMp(UnitState.UnitStats._increaseMp);
 
         if (UnitState._currentMp >= 100)
@@ -234,8 +243,6 @@ public class Unit : MonoBehaviour
             return;
 
         _isAttacking = false;
-
-        _anim.SetFloat(AttackSpeed, 1f);
 
         if (_queueSkillAfterHit)
         {
@@ -255,17 +262,14 @@ public class Unit : MonoBehaviour
         if (_target != null && !_target.UnitState.IsDead && Services.Perception.IsInRange(this, _target))
         {
             RequestState(UnitActionState.Attack);
-            _isAttacking = false;
-            _attackEventArmed = false;
-            _attackTimer = 0f;
+            return;
         }
-        else
-        {
-            RequestState(UnitActionState.Chase);
-            SetLocomotionChase();
-            _isAttacking = false;
-            _attackEventArmed = false;
-        }
+
+        RequestState(UnitActionState.Chase);
+        SetLocomotionChase();
+
+        _isAttacking = false;
+        _attackEventArmed = false;
     }
 
     public void AnimEvent_DeathEnd()

@@ -7,7 +7,7 @@ public class VfxManager
 {
     private VfxPool _pool = new VfxPool("VFX_Pool");
 
-    
+
     #region Buff Animation Value
     private float kHeadOffsetY = 0.1f;   // 유닛 머리 기준 오프셋
     private float kExtraRiseY = 0.2f;   // 추가 상승 높이
@@ -49,6 +49,26 @@ public class VfxManager
 
         return go;
     }
+
+    public void PlayHitEffect(Unit target)
+    {
+        if (target == null)
+            return;
+
+        var prefab = EffectManager.Instance._hitFx;
+        if (prefab == null)
+            return;
+
+        Vector3 pos = TileCenter(target.CurrentTileRef);
+
+        var go = _pool.Spawn(prefab, pos, Quaternion.identity);
+        go.transform.localScale = Vector3.one * 0.5f;
+
+        if (go.GetComponent<VfxDespawn>() == null)
+            go.AddComponent<VfxDespawn>();
+
+    }
+
 
     public void PlayLineEffect(GameObject prefab, Tile from, Tile to, float scale = 1f)
     {

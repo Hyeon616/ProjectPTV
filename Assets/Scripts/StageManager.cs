@@ -7,7 +7,7 @@ public class StageManager : MonoBehaviour
     [SerializeField] private FieldSceneManager _fieldSceneManager;
     [SerializeField] private List<StageWaveData> _stageWaveData = new List<StageWaveData>();
 
-    private readonly float _waveInterval = 10f;
+    private readonly float _waveInterval = 5f;
 
     private int _selectedStage = 0;
 
